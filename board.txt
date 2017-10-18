@@ -1,3 +1,0 @@
-# OpenSprinkler_Arduino_V_2_1_6 build property overrides
-#
-network.port=8266
