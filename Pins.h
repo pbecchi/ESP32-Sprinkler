@@ -1,5 +1,5 @@
-//#define SG21
-//#define OS217
+#define SG21
+#define OS217
 #pragma once
 /*------------------------------------------------------------------------------------------------------
 The file details each pin used for your HW configuration. 
@@ -429,7 +429,9 @@ This way you can use expander for all functions (interrupt donot work right now)
 //#define BATTERY											// for OpenSprinkler Solar battery powered
 //#define INA219											// if INA219 board is present
 //#define OSBEE 0											// ==0 if is a battery powered board
-// OLED 128*64 DISPLAY
+// OLED 128*64 DISPLAY 
+#undef WIFIMANAGER
+#undef OTA_UPLOAD
 #define DS1307RTC I2CRTC
 #define LCD_SSD1306
 #define LCD_RST 12		

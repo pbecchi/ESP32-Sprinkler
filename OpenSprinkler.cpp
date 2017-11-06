@@ -2122,7 +2122,7 @@ void OpenSprinkler::clear_all_station_bits()
 int rf_gpio_fd = -1;
 #endif
 
-#ifdef PORT_RF
+//#ifdef PORT_RF
 /** Transmit one RF signal bit */
 void transmit_rfbit ( ulong lenH, ulong lenL )
 {
@@ -2194,7 +2194,7 @@ void OpenSprinkler::switch_rfstation ( byte *code, bool turnon )
 #endif
 
 }
-#endif
+//#endif
 /** Callback function for remote station calls */
 static void switchremote_callback ( byte status, uint16_t off, uint16_t len )
 {

@@ -96,6 +96,7 @@ Original Opensprinkler code commences below here
 #else
 /////////OTA UPLOAD LIBRARIES/////////////////////////////
 #ifdef OTA_UPLOAD
+#include <ESP8266mDNS.h>
  #include <ArduinoOTA.h>
 #endif
 #ifndef ESP32
@@ -104,6 +105,7 @@ Original Opensprinkler code commences below here
  #include <DNSServer.h>
  #include <ESP8266WebServer.h>
  #include <WiFiManager.h> 
+// #include <Arduino-Ping-master/ESP8266Ping.h>
 #else
  #include <WiFi.h>
 #endif

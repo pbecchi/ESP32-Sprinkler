@@ -58,9 +58,7 @@ Refer to the README file for more information
 #ifndef ESP32
   #include <ESP8266WiFi.h>
   #include <WiFiClientSecure.h>
- 
-
-  #include <Arduino-Ping-master\ESP8266ping.h>
+  #include <Arduino-Ping-Master/ESP8266Ping.h>
 #else 
   #include <WiFi.h>
 #endif

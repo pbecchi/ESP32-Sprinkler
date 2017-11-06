@@ -32,7 +32,7 @@
 
 	#include "defines.h"
 	#include "OpenSprinkler.h"
-	#include "util.h"
+	#include "utils.h"
     #include "Eeprom_ESP.h"
 #if !defined(ESP8266)&&!defined(ESP32)
 	#include <SDFat.h>
