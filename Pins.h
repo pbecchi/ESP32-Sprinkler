@@ -52,7 +52,33 @@ This way you can use expander for all functions (interrupt donot work right now)
 //#define SLEEP_START 20
 #define STA_HIGH HIGH   // normally 1 station output on
 #define STA_LOW LOW     // normally 0 station output off
+/////ADDITIONAL PIN DEFAULT   no sensor board
+//   ADDITIONAL PIN CAN BE DEFINED INDIVIDUALLY IN PROTOTYPE BOARD SECTION
+//   or USING  ADDITIONAL_SENSOR defined ESP8266_C or PCF8574_C or SG21_ 
+//    tO DEFINE  STANDARD PINOUTS for direct ESP8266 or PCFexpander or Csaba board
+#if defined(ESP8266) || defined(ESP32)
+#define PIN_RAINSENSOR    DUMMY_PIN    // rain sensor is connected to pin D3
+#define PIN_FLOWSENSOR    DUMMY_PIN    // flow sensor (currently shared with rain sensor, change if using a different pin)
+#define PIN_FLOWSENSOR_INT DUMMY_PIN    // flow sensor interrupt pin (INT1)
+#define PIN_EXP_SENSE      DUMMY_PIN    // expansion board sensing pin (A4)
+#define PIN_CURR_SENSE     DUMMY_PIN    // current sensing pin (A7)
+#define PIN_CURR_DIGITAL  DUMMY_PIN    // digital pin index for A7
+#define PIN_SOILSENSOR_1	DUMMY_PIN	  // digital SoilSensor 1 (A7)
+#define PIN_SOILSENSOR_2	DUMMY_PIN	  // digital SoilSensor 2 (A5)
+#else //This is setting for oroginal  O.S. 
 
+#define PIN_RAINSENSOR    11    // rain sensor is connected to pin D3
+#define PIN_FLOWSENSOR    11    // flow sensor (currently shared with rain sensor, change if using a different pin)
+#define PIN_FLOWSENSOR_INT 1    // flow sensor interrupt pin (INT1)
+#define PIN_EXP_SENSE      4    // expansion board sensing pin (A4)
+#define PIN_CURR_SENSE     7    // current sensing pin (A7)
+#define PIN_CURR_DIGITAL  24    // digital pin index for A7
+
+
+#define PIN_RF_DATA       28    // RF data pin
+#define PORT_RF        PORTA
+#define PINX_RF        PINA3
+#endif 
 
 ////////////////////////////////////////BASIC ESP8266 DEF //////////////////////////////
 #if defined(ESP8266) 
@@ -73,8 +99,9 @@ This way you can use expander for all functions (interrupt donot work right now)
 #define OS_HW_VERSION    0.0      // it will define releases
 //------ ESP32 basic definitions-------------------------------------------------------
 #elif defined(ESP32)
-//#define WIFIMANAGER wifimanager not supported yet!
-
+//#define WIFIMANAGER wifimanager not supported yet Hardcoded SSID and PSW!
+#define SSID_NAME "Vodafone-Out"
+#define WIFI_PSW  "paolo-48"
 #ifndef D1
  #define D2 21
  #define D1 22
@@ -98,6 +125,7 @@ This way you can use expander for all functions (interrupt donot work right now)
 #define MEGA_W5100 1
 #define ESP8266_C 2
 #define PCF8574_C 3
+#define SG21_ 4
 //////flags to define if button pins are switched to ground 0 or to Vcc 1
 #define BUT1_ON 1
 #define BUT2_ON 1
@@ -670,7 +698,7 @@ const uint8_t spi_ss_pin[] =   // SS pin for each device
 #define PIN_SD_CS         34    // SD card chip select pin
 #endif // OPENSPRINKLER_ARDUINO_W5100
 //
-///////////////////////////////////////////////////ADDITIONAL SENSORS PINS////////////////
+///////////////////////////////////////////////////ADDITIONAL SENSORS PIN STANDARD DEFINITIONS////////////////
 //
 
 #if ADDITIONAL_SENSORS==MEGA_W5100
@@ -686,6 +714,13 @@ const uint8_t spi_ss_pin[] =   // SS pin for each device
 #define PIN_FLOWSENSOR    D3   // flow sensor (currently shared with rain sensor, change if using a different pin)
 #define PIN_FLOWSENSOR_INT 0    // flow sensor interrupt pin (INT1)
 #define PIN_EXP_SENSE      D6    // expansion board sensing pin (A4)
+#elif ADDITIONAL_SENSORS==SG21_ //CSABA SENSOR CODE STANDARD BOARD
+#define PIN_RAINSENSOR    2    // rain sensor/programswitch input is connected to pin D3/INT2
+#define PIN_FLOWSENSOR     11    // flow sensor (INT1)
+#define PIN_CURR_SENSE     6    // current sensing pin (A6)
+#define PIN_CURR_DIGITAL  25    // digital pin index for A6
+#define PIN_SOILSENSOR_1	24	  // digital SoilSensor 1 (A7)
+#define PIN_SOILSENSOR_2	26	  // digital SoilSensor 2 (A5)
 #elif ADDITIONAL_SENSORS==PCF8574_C
 #define PIN_RAINSENSOR    D6    // rain sensor is connected to pin D3
 #define PIN_FLOWSENSOR    D5      // flow sensor (currently shared with rain sensor, change if using a different pin)
@@ -693,32 +728,6 @@ const uint8_t spi_ss_pin[] =   // SS pin for each device
 #define PIN_EXP_SENSE      D6    // expansion board sensing pin (A4)
 #define PIN_CURR_SENSE     A0    // current sensing pin (A7)
 #define PIN_CURR_DIGITAL   A0    // digital pin index for A7
-
-#else //additional sensors undefined ESP8266
-#if defined(ESP8266) || defined(ESP32)
-#define PIN_RAINSENSOR    DUMMY_PIN    // rain sensor is connected to pin D3
-#define PIN_FLOWSENSOR    DUMMY_PIN    // flow sensor (currently shared with rain sensor, change if using a different pin)
-#define PIN_FLOWSENSOR_INT DUMMY_PIN    // flow sensor interrupt pin (INT1)
-#define PIN_EXP_SENSE      DUMMY_PIN    // expansion board sensing pin (A4)
-#define PIN_CURR_SENSE     DUMMY_PIN    // current sensing pin (A7)
-#define PIN_CURR_DIGITAL  DUMMY_PIN    // digital pin index for A7
-
-#else //This is setting for Ray O.S. 
-
-#define PIN_RAINSENSOR    11    // rain sensor is connected to pin D3
-#define PIN_FLOWSENSOR    11    // flow sensor (currently shared with rain sensor, change if using a different pin)
-#define PIN_FLOWSENSOR_INT 1    // flow sensor interrupt pin (INT1)
-#define PIN_EXP_SENSE      4    // expansion board sensing pin (A4)
-#define PIN_CURR_SENSE     7    // current sensing pin (A7)
-#define PIN_CURR_DIGITAL  24    // digital pin index for A7
-
-
-#define PIN_RF_DATA       28    // RF data pin
-#define PORT_RF        PORTA
-#define PINX_RF        PINA3
-#endif 
-
-
 #endif      //ESP8266
 
 

@@ -37,7 +37,10 @@
 */
 
 #include "SensorGroup.h"
+
 #ifdef SG21
+#undef DB_MASK
+#define DB_MASK 64
 extern OpenSprinkler os;
 //extern SdFat sd;
 extern void write_log(byte type, ulong curr_time, ulong param);

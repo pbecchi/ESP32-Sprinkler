@@ -731,9 +731,6 @@ typedef unsigned char   uint8_t;
 typedef short           int16_t;
 typedef unsigned short  uint16_t;
 typedef bool boolean;
-
-#endif  // end of Hardawre defines
-
 #ifdef SG21
 #define PIN_RAINSENSOR    2    // rain sensor/programswitch input is connected to pin D3/INT2
 #define PIN_FLOWSENSOR     11    // flow sensor (INT1)
@@ -747,6 +744,9 @@ typedef bool boolean;
 #define PIN_CURR_SENSE     7    // current sensing pin (A7)
 #define PIN_CURR_DIGITAL  24    // digital pin index for A7
 #endif
+#endif  // end of Hardawre defines
+
+
 #define TMP_BUFFER_SIZE     128  // scratch buffer size
 
 /** Other defines */

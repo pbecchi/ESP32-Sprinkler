@@ -42,8 +42,8 @@
 #else
  #include "eeprom_mio.h"
 #endif  //EEPROM_ESP
-char* SSID = "Vodafone-Out";
-char* PASSWORD = "paolo-48";
+char* SSID = SSID_NAME;// "Vodafone-Out";
+char* PASSWORD = WIFI_PSW;// "paolo-48";
 #endif
 #include "OpenSprinkler.h"
 extern OpenSprinkler os;
