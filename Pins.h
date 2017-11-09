@@ -1,43 +1,52 @@
-#define SG21
-#define OS217
+
 #pragma once
+//=====================================================================
+// BASIC INSTRUCTIONS
+// SELETC PROTOTYPE N: FOR YOUR CONFIGURATION             line 152
+// enter SSID_NAME and WIFI_PSW to mach your wiFi network line 115,116
+//=====================================================================
 /*------------------------------------------------------------------------------------------------------
 The file details each pin used for your HW configuration. 
 You have first to define the configuration you are working on (ESP or other MCU) 
 and the type of peripheral you are using:see detailed table about it
 Then you have to select the pins (for I2c, station output, shift registers, rain ....all other functions)
 and assign it to a pin number, using following rule:
-    -pin <32 will be assigned to MCU (ESP8266) GPIO pin numbers( only few are available for ESP8266).
-    -pin >32 and <48 will be assigned to an first I2c extender (the one with the lowest address)
-    -pin >48 and <64 will be assigned to second I2c extender 
+    -pin <32			(or <48 ESP32)			pin  will be assigned to MCU  GPIO pin numbers.
+    -pin >32 and <48	(or >48 && <64 ESP32)	pin  will be assigned to an first I2c extender (the one with the lowest address)
+    -pin >48 and <64	(or >64 && <80 ESP32)	pin  will be assigned to second I2c extender 
     -so on 16 pin at the time
 This way you can use expander for all functions (interrupt donot work right now) and free most of the pins on MCU
 ------------------------------------------------------------------------------------------------------------------*/
 // ===================================================================================================================
 // HARDWARE CONFIGURATIONS								GPIO channels                     #define
 //
-// RTC               DS1307, DS33xx,MCP7940				I2C channels					allways
-// LCD               Standard ,							GPIO 5 channels					undef
+// RTC               DS1307, DS33xx						I2C channels					def  DS1307RTC = RTC_DS1307
+//					 MCP7940															def  DS1307RTC = RTC_MCP7940
+//					 PCF8563															def  DS1307RTC = RTC_PCF8563
+// LCD               Standard ,							GPIO 5 channels					none
 //					 Freetronic,						?								def OPENSPRINKLER_ARDUINO_FREETRONICS_LCD
-//					 I2C								I2C ch							def LCDI2C
+//					 I2C								I2C ch							def LCDI2C 
+//					 GLCD I2c 128*64					I2c channels					def LCD_SSD1306
 // Station Output	 Std.Shift registers				GPIO 3 channels					def SHIFT_REG
-//                   Shift register+PCF8574				PCF8574 4 IO					def SHIFT_REG+ I2C_SHIFT_REG		
+//                   Shift register+PCF8574				PCF8574 4 IO					def SHIFT_REG+ I2C_SHIFT_REG+PCF8574_M		
 //					 Discrete							8/16 channels					def OPENSPRINKLER_ARDUINO_DISCRETE
-//					 I2C								I2C ch							def I2C_SHIFT_REG + OPENSPRINKLER_ARDUINO_DISCRETE
+//					 I2C								I2C ch							def  OPENSPRINKLER_ARDUINO_DISCRETE+PCF8574_M
 // Buttons           Std. 3 Dig.Inputs					GPIO 3 Channels					undef BUTTON_ADC_PIN
 //					 analog Input						1 anal. chan.					def BUTTON_ADC_PIN
+//					 on i2c expander					3 channel >=48 ESP32			def PCF8574_M
 // SD                Std. SPI MicroSD					SPI channels +1					def SD_FAT	
 //					 SPIFFS (emulations in Flash mem)	none							def SPIFFSDFAT
 // EEPROM            Std. 2kB on board(Mega)			onboard							AUTOMATIC ON MEGA
-//					 I2C on RTC board	4kB				I2C channels					 defined(ESP8266) || defined(ESP32) undef EEPROM_ESP(+++ Comment out #define EEPROM_ESP in libsel.h)
+//					 I2C on RTC board	4kB				I2C channels				    undef EEPROM_ESP(+++ Comment out #define EEPROM_ESP in libsel.h)
 //					 on ESP8266 flash mem				internal						def EEPROM_ESP (+++#define EEPROM_ESP in libsel.h)
 //ETHERNET			 std ENC							SPI channels					undef OPENSPRINKLER_ARDUINO_DISCRETE
 //					 W5100 SHIELD						SPI channels					def OPENSPRINKLER_ARDUINO_W5100
-//					 ESP8266 onboard					none							ESP8266 & def OPENSPRINKLER_ARDUINO_W5100
+//					 ESP8266 ESP32 WiFI					none							def OPENSPRINKLER_ARDUINO_W5100
 //ADDITIONAL DEV,	 RF_REMOTE							GPIO 2 Channels					def ADDITIONAL_SENSORS
 //					 FLUX_GAGE							GPIO 1 + interrupt				=MEGA_W5100   (ass.to mega GIO)
 //																						=PCF8574_C(ass.to PCF8574&ESP8266)
 //																						=ESP8266_C(ass.only to ESP8266)
+//																						=SG21_  (for standard Tods Csaba board)
 //===============================================additional options==============================================================
 //Hostname			you can access with http://NAME.local where name is OSxx=n.	HW		def HOST_NAM
 //
@@ -49,6 +58,9 @@ This way you can use expander for all functions (interrupt donot work right now)
 //#define DS1307RTC RTC_DS1307
 //#define DS1307RTC RTC_MCP7940
 #define DUMMY_PIN 0x1F
+#ifdef ESP32
+  #define DUMMY_PIN 39   //unused pin
+#endif
 //#define SLEEP_START 20
 #define STA_HIGH HIGH   // normally 1 station output on
 #define STA_LOW LOW     // normally 0 station output off
@@ -137,7 +149,7 @@ This way you can use expander for all functions (interrupt donot work right now)
 //                       PIN    ASSIGNEMENT
 //
 //////////////////////////////////////////////////////////////////////////
-#define PROTO 12    ///////////////////////board type selection////////////
+#define PROTO 21    ///////////////////////board type selection////////////
 /////////////////////////////////////////////////////////////////////////
 //////////////////////////////proto board 1////////////rear garden//////////////////////////////////
 #if PROTO==1 // shift register 
@@ -493,7 +505,44 @@ This way you can use expander for all functions (interrupt donot work right now)
 				  			//:no sd ....EMULATED ON fLASH
 //#define ADDITIONAL_SENSORS ESP8266_C        //:additional sensors to ESP  ESP32_ER
 #define EEPROM_ESP                          //modify in libsel.h
-
+//=========================================================================================
+#elif PROTO==21 //           ESP32 with SG21 board    Testbench
+//=========================================================================================
+#define SG21
+#define OS217
+#define EEPROM_ESP                          //must be also in libsel.h
+#define SDA_PIN   16
+#define SCL_PIN   17
+#undef WIFIMANAGER
+#undef OTA_UPLOAD
+#define DS1307RTC I2CRTC
+//-------------- OLED 128*64 DISPLAY ------------------------------------------------------
+#define LCDI2C								//:i2c LCD
+#define LCD_SSD1306
+#define LCD_RST DUMMY_PIN		
+#define LCD_ADDR 0x3c
+//-------------- SHIFT REGISTER OUTPUT------------------------------------------------------
+#define SHIFT_REG
+#define PIN_SR_DATA        12    // shift register data pin
+#define PIN_SR_CLOCK       13    // shift register clock pin
+#define PIN_SR_OE          14    // shift register output enable pin
+#define PIN_SR_LATCH       15    // shift register latch pin
+//-------------------------buttons--------------------------------------------
+//:digital buttons ---> IO n.on PCF8574 n.0 pins: Ox00 <>0x02
+#define PIN_BUTTON_1 34			//button are on  PCF8574 expaneder adr 0x3F
+#define PIN_BUTTON_2 4
+#define PIN_BUTTON_3 36
+#define BUT1_ON 1		//PIN input:1= Vcc, 0 =GND
+#define BUT2_ON 1		//PIN input:1= Vcc, 0 =GND
+#define BUT3_ON 1		//PIN input:1= Vcc, 0 =GND
+//:no sd ....EMULATED ON fLASH
+//#define ADDITIONAL_SENSORS ESP8266_C        //:additional sensors to ESP  ESP32_ER
+#define PIN_RAINSENSOR      5     // rain sensor is connected to pin D3
+#define PIN_FLOWSENSOR      35    // flow sensor (currently shared with rain sensor, change if using a different pin)
+#define PIN_CURR_SENSE      37    // current sensing pin (A7)
+#define PIN_CURR_DIGITAL    37    // digital pin index for A7
+#define PIN_SOILSENSOR_1	32	  // digital SoilSensor 1 (A7)
+#define PIN_SOILSENSOR_2	33	  // digital SoilSensor 2 (A5)
 #endif
 ///////////////////////////////////////////////END OF PROTOTYPE  LIST//////////////////////////////////////////////////////////
 //////check if libsel.h is correct//////////////////////////////////////
@@ -575,10 +624,12 @@ like the regular opensprinkler hardware) */
 #endif
 #else
  //-----------------------ESP8266------------------------------------------
+#ifndef PIN_SR_LATCH //pin already defined above
 #define PIN_SR_LATCH       D3    // shift register latch pin
 #define PIN_SR_DATA        D0    // shift register data pin
 #define PIN_SR_CLOCK       10    // shift register clock pin
 //#define PIN_SR_OE              // shift register output enable pin
+#endif
 #endif// END ESP8266--------------------------------------------------------------------------
 #endif
 

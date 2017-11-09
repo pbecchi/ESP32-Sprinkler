@@ -54,7 +54,10 @@ PCF8574 PCF[10];//_38(0x3F);  // add switches to lines  (used as input)
  //            if PIN_NUMBER > MAX MCU PINS (16 for ESP8266) PINs are assigned to PCF 8574 I/O lines 
  //				(16 pins reserved for each IC) (in the order given by ESP8266 address)
  //
-#define MAX_MCU_PINS 32
+ #define MAX_MCU_PINS 32   //Esp8266 setting
+#ifdef ESP32
+ #define MAX_MCU_PINS 48   //Esp32 setting
+#endif 
 #define pinMode(x,y) if(x<MAX_MCU_PINS) pinMode(x,y);else{DEBUG_PRINT(x); DEBUG_PRINT(" at PCF_addr ");DEBUG_PRINTLN((x - MAX_MCU_PINS) / 16);}//verify pin on Ic??
 #define digitalWrite(x,y) (x<MAX_MCU_PINS)? digitalWrite(x,y) :PCF[(x - MAX_MCU_PINS) / 16].write((byte)(x - MAX_MCU_PINS) % 16, y)//;DEBUG_PRINT("<W");DEBUG_PRINT(x);DEBUG_PRINT(">");DEBUG_PRINT(y) //verify pin on Ic??
 #define digitalRead(x)   (x<MAX_MCU_PINS)? digitalRead(x): PCF[(x-MAX_MCU_PINS)/16].read((x-MAX_MCU_PINS)%16)
@@ -1472,7 +1475,7 @@ void BeeClose(byte zid) {
 static byte prev_bits = 0xF;
 void OpenSprinkler::apply_all_station_bits()
 {
-
+#define MS7 7-s
 #ifdef OPENSPRINKLER_ARDUINO_DISCRETE //<MOD> ===== Digital Outputs 
     byte bid, s, sbits;
 
@@ -1494,7 +1497,7 @@ void OpenSprinkler::apply_all_station_bits()
 #endif
 
 		if (MAX_EXT_BOARDS - bid < PIN_EXT_BOARDS)
-#define MS7 7-s
+
 		{			
 			for (s = 0; s < 8; s++)
 			{
