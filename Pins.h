@@ -532,9 +532,9 @@ This way you can use expander for all functions (interrupt donot work right now)
 #define PIN_BUTTON_1 34			//button are on  PCF8574 expaneder adr 0x3F
 #define PIN_BUTTON_2 4
 #define PIN_BUTTON_3 36
-#define BUT1_ON 1		//PIN input:1= Vcc, 0 =GND
-#define BUT2_ON 1		//PIN input:1= Vcc, 0 =GND
-#define BUT3_ON 1		//PIN input:1= Vcc, 0 =GND
+#define BUT1_ON 0		//PIN input:1= Vcc, 0 =GND
+#define BUT2_ON 0		//PIN input:1= Vcc, 0 =GND
+#define BUT3_ON 0		//PIN input:1= Vcc, 0 =GND
 //:no sd ....EMULATED ON fLASH
 //#define ADDITIONAL_SENSORS ESP8266_C        //:additional sensors to ESP  ESP32_ER
 #define PIN_RAINSENSOR      5     // rain sensor is connected to pin D3

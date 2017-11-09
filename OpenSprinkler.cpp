@@ -1247,7 +1247,13 @@ void OpenSprinkler::begin()
 #else
 	long tot = 0;
 	DEBUG_PRINTLN("Start SPIFFS....");
-	if (SPIFFS.begin()) {
+
+#ifndef ESP32
+	 if (SPIFFS.begin()) 
+#else
+	 if(SPIFFS.begin(true))
+#endif
+	{
 #ifdef ESP8266
 		Dir dir = SPIFFS.openDir("/");
 		while (dir.next()) { DEBUG_PRINT(dir.fileName()); DEBUG_PRINT("  "); DEBUG_PRINTLN(dir.fileSize()); tot += dir.fileSize(); }
