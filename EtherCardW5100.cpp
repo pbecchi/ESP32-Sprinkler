@@ -29,6 +29,7 @@
 #include <FS.h>
 #elif defined(ESP32)
 #include <SPIFFS.h>
+
 #else 
 #include <SD.h>
 #include <SdFat.h>
@@ -36,7 +37,6 @@
 #endif
 #ifndef ESP32
   #include <ESP8266mDNS.h>
-  #include <lwip/netdb.h> //needed for gethostbyname()
 #endif
 #ifdef EEPROM_ESP
  #include "Eeprom_ESP.h"
@@ -1592,7 +1592,9 @@ static void set_seq()
 /// <param name="name">Host name to lookup</param>
 /// <param name="fromRam">NOT IMPLEMENTED (Look up cached name. Default = false)</param>
 /// <returns>True on success. </returns>
-
+#ifdef ESP32
+ #include <lwip/netdb.h> //needed for gethostbyname()
+#endif
 bool EtherCardW5100::dnsLookup(const char* name, bool fromRam)
 {
 
