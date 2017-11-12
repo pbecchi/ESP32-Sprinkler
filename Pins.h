@@ -507,12 +507,12 @@ This way you can use expander for all functions (interrupt donot work right now)
 #define EEPROM_ESP                          //modify in libsel.h
 //=========================================================================================
 #elif PROTO==21 //           ESP32 with SG21 board    Testbench
-//=========================================================================================
+//=========================================================================================mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,  nb                                                                                                                                                                                                                                                                          ,mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
 #define SG21
 #define OS217
 #define EEPROM_ESP                          //must be also in libsel.h
 #define SDA_PIN   16
-#define SCL_PIN   17
+#define SCL_PIN   13
 #undef WIFIMANAGER
 #undef OTA_UPLOAD
 #define DS1307RTC I2CRTC
@@ -524,8 +524,8 @@ This way you can use expander for all functions (interrupt donot work right now)
 //-------------- SHIFT REGISTER OUTPUT------------------------------------------------------
 #define SHIFT_REG
 #define PIN_SR_DATA        12    // shift register data pin
-#define PIN_SR_CLOCK       13    // shift register clock pin
-#define PIN_SR_OE          14    // shift register output enable pin
+#define PIN_SR_CLOCK       17    // shift register clock pin
+#define PIN_SR_OE          14    // shift register output enable pind
 #define PIN_SR_LATCH       15    // shift register latch pin
 //-------------------------buttons--------------------------------------------
 //:digital buttons ---> IO n.on PCF8574 n.0 pins: Ox00 <>0x02

@@ -35,7 +35,8 @@
 #endif
 #endif
 #ifndef ESP32
- #include <ESP8266mDNS.h>
+  #include <ESP8266mDNS.h>
+  #include <lwip/netdb.h> //needed for gethostbyname()
 #endif
 #ifdef EEPROM_ESP
  #include "Eeprom_ESP.h"
@@ -1591,21 +1592,27 @@ static void set_seq()
 /// <param name="name">Host name to lookup</param>
 /// <param name="fromRam">NOT IMPLEMENTED (Look up cached name. Default = false)</param>
 /// <returns>True on success. </returns>
-bool EtherCardW5100::dnsLookup ( const char* name, bool fromRam )
+
+bool EtherCardW5100::dnsLookup(const char* name, bool fromRam)
 {
 
-    IPAddress serverIP ( 0, 0, 0, 0 );
+	IPAddress serverIP(0, 0, 0, 0);
 	DEBUG_PRINT(name);
 	DEBUG_PRINTLN(" Starting LOOKUP");
 
 
 #if  defined(ESP8266)     //use WiFi.hostByName
-	dns_client.begin ( ETHERNE.gatewayIP());   ////--may not be necessary
+	dns_client.begin(ETHERNE.gatewayIP());   ////--may not be necessary
 	int result = ETHERNE.hostByName(name, serverIP);
 #elif defined(ESP32)
-	int result = 0;	////---	WiFi.getaddrinfo(name, "80", , serverIP);
+
+	int result = 0;	////---
+	struct hostent *host;
+	host = gethostbyname(name);
+	if (host->h_addr[0] > 0)result = 1;
+	serverIP = IPAddress(host->h_addr[0], host->h_addr[1], host->h_addr[2], host->h_addr[3]);
 #else
-	dns_client.begin(Ethernet.dnsServerIP());
+	dns_client.begin(Ethernet.dnsServerIP()); 
 	int result = dns_client.getHostByName(name, serverIP);
 #endif
 

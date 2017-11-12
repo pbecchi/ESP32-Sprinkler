@@ -157,7 +157,7 @@ static void getweather_callback ( byte status, uint16_t off, uint16_t len )
 void GetWeather()
 {
     // perform DNS lookup for every query
-	char weather_Url[15];
+	char weather_Url[25];
     nvm_read_block ( weather_Url, ( void* ) ADDR_NVM_WEATHERURL, MAX_WEATHERURL );
     ether.dnsLookup ( weather_Url, true );
 	
