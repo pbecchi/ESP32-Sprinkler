@@ -33,7 +33,7 @@ uint8_t I2CRTC::addr = 0;
 
 I2CRTC::I2CRTC()
 {
-  Wire.begin();
+ // Wire.begin();
 }
 
 bool I2CRTC::detect()

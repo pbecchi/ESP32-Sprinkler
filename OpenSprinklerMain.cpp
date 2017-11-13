@@ -409,11 +409,11 @@ void do_setup()
 #ifdef OPENSPRINKLER_ARDUINO_W5100
     // This code is needed to handle multiple SPI devices - all the CS pins for each SPI device
     // need to be pulled high to avoid interefering with each other (ethernet, SD, RF24 etc)
-    for ( int i = 0; i < SPI_DEVICES; i++ )
+/*    for ( int i = 0; i < SPI_DEVICES; i++ )
     {
         pinMode ( spi_ss_pin[i], OUTPUT );
         digitalWrite ( spi_ss_pin[i], HIGH );
-    }
+    }*/
 #endif
 
 #ifdef OPENSPRINKLER_ARDUINO

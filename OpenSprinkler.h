@@ -42,8 +42,9 @@ extern "C" {
 #include <Adafruit_INA219-master\Adafruit_INA219.h>
 #endif
 #ifdef LCDI2C
-#ifdef LCD_SSD1306
-
+#if   defined (LCD_SH1106)
+#include "lib\Adafruit_SH1106.h"
+#elif defined( LCD_SSD1306)
 #include "lib\Adafruit_SSD1306.h"
 #else
 #include <LiquidCrystal_I2C.h>
@@ -270,8 +271,10 @@ public:
 
 #ifdef LCDI2C
 
-
-#ifdef LCD_SSD1306
+// select type of lcd used
+#if  defined(LCD_SH1106)
+	static Adafruit_SH1106 lcd;
+#elif defined(LCD_SSD1306)
 	static Adafruit_SSD1306 lcd;
 #elif defined(LCDI2C)
 	static	LiquidCrystal_I2C lcd;

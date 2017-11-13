@@ -26,17 +26,7 @@ This way you can use expander for all functions (interrupt donot work right now)
 // LCD               Standard ,							GPIO 5 channels					none
 //					 Freetronic,						?								def OPENSPRINKLER_ARDUINO_FREETRONICS_LCD
 //					 I2C								I2C ch							def LCDI2C 
-//					 GLCD I2c 128*64					I2c channels					def LCD_SSD1306
-// Station Output	 Std.Shift registers				GPIO 3 channels					def SHIFT_REG
-//                   Shift register+PCF8574				PCF8574 4 IO					def SHIFT_REG+ I2C_SHIFT_REG+PCF8574_M		
-//					 Discrete							8/16 channels					def OPENSPRINKLER_ARDUINO_DISCRETE
-//					 I2C								I2C ch							def  OPENSPRINKLER_ARDUINO_DISCRETE+PCF8574_M
-// Buttons           Std. 3 Dig.Inputs					GPIO 3 Channels					undef BUTTON_ADC_PIN
-//					 analog Input						1 anal. chan.					def BUTTON_ADC_PIN
-//					 on i2c expander					3 channel >=48 ESP32			def PCF8574_M
-// SD                Std. SPI MicroSD					SPI channels +1					def SD_FAT	
-//					 SPIFFS (emulations in Flash mem)	none							def SPIFFSDFAT
-// EEPROM            Std. 2kB on board(Mega)			onboard							AUTOMATIC ON MEGA
+//					 GLCD I2c 128*64					I2c channels					def LCD_SSD1306  (= SD1106)_SSD				AUTOMATIC ON MEGA
 //					 I2C on RTC board	4kB				I2C channels				    undef EEPROM_ESP(+++ Comment out #define EEPROM_ESP in libsel.h)
 //					 on ESP8266 flash mem				internal						def EEPROM_ESP (+++#define EEPROM_ESP in libsel.h)
 //ETHERNET			 std ENC							SPI channels					undef OPENSPRINKLER_ARDUINO_DISCRETE
@@ -117,7 +107,7 @@ This way you can use expander for all functions (interrupt donot work right now)
 #ifndef D1
  #define D2 21
  #define D1 22
- #define D6 17
+ //#define D6 17 
 #endif
 ////////ota upload//////////
 #define OTA_UPLOAD
@@ -512,19 +502,20 @@ This way you can use expander for all functions (interrupt donot work right now)
 #define OS217
 #define EEPROM_ESP                          //must be also in libsel.h
 #define SDA_PIN   16
-#define SCL_PIN   13
+#define SCL_PIN   17
 #undef WIFIMANAGER
 #undef OTA_UPLOAD
 #define DS1307RTC I2CRTC
 //-------------- OLED 128*64 DISPLAY ------------------------------------------------------
 #define LCDI2C								//:i2c LCD
 #define LCD_SSD1306
+#define LCD_SH1106
 #define LCD_RST DUMMY_PIN		
 #define LCD_ADDR 0x3c
 //-------------- SHIFT REGISTER OUTPUT------------------------------------------------------
 #define SHIFT_REG
 #define PIN_SR_DATA        12    // shift register data pin
-#define PIN_SR_CLOCK       17    // shift register clock pin
+#define PIN_SR_CLOCK       13    // shift register clock pin
 #define PIN_SR_OE          14    // shift register output enable pind
 #define PIN_SR_LATCH       15    // shift register latch pin
 //-------------------------buttons--------------------------------------------
@@ -672,7 +663,7 @@ http://forum.freetronics.com/viewtopic.php?t=770 */
 #ifndef LCD_ADDR   //--------if not defined in protoboard declarations these are defaults
  #define LCD_ADDR 0x27
 #endif
-#if !defined(PIN_LCD_EN)
+#if !defined(PIN_LCD_EN)&&!defined(LCD_SSD1306) 
 #define PIN_LCD_RS        0    // LCD rs pin
 #define PIN_LCD_RW        1    // LCD rw pin
 #define PIN_LCD_EN        2    // LCD enable pin

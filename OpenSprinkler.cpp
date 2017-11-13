@@ -131,7 +131,9 @@ LiquidCrystal OpenSprinkler::lcd ( PIN_LCD_RS, PIN_LCD_EN, PIN_LCD_D4, PIN_LCD_D
 #else
 #ifdef LCDI2C
 
-#ifdef LCD_SSD1306
+#ifdef LCD_SH1106
+Adafruit_SH1106 OpenSprinkler::lcd(SDA_PIN, SCL_PIN);
+#elif defined( LCD_SSD1306)
 #ifndef LCD_RST
 #define LCD_RST -1
 #endif
@@ -984,7 +986,11 @@ void OpenSprinkler::lcd_start()
 	lcd.print("start..V.2.1.6");
 
 #else
+#if defined(LCD_SH1106)
+	lcd.begin(SH1106_SWITCHCAPVCC, 0x3c);
+#elif defined(LCD_SSD1306)
 	lcd.begin(SSD1306_SWITCHCAPVCC, 0x3c);
+#endif
 	lcd.display();
 	delay(2000);
 	lcd.clearDisplay();
@@ -1008,11 +1014,12 @@ void OpenSprinkler::begin()
 	// Init I2C
 #if defined(ESP8266) || defined(ESP32)
 	Wire.begin(SDA_PIN, SCL_PIN);
-	DEBUG_PRINTLN("wire begin");
+	DEBUG_PRINT("wire begin("); DEBUG_PRINT(SDA_PIN); DEBUG_PRINT(','); DEBUG_PRINT(SCL_PIN); DEBUG_PRINTLN(')');
 #else
+	
 	Wire.begin();
 #endif
-
+	delay(2000);
 	ScanI2c();
 
 #ifdef OPENSPRINKLER_ARDUINO_DISCRETE
@@ -3323,10 +3330,12 @@ void OpenSprinkler::lcd_set_brightness ( byte value )
         }
     }
 #else
+#ifndef LCD_SSD1306
 	if (value == 1)
 		digitalWrite(PIN_LCD_BACKLIGHT, LOW);
 	else
 		digitalWrite(PIN_LCD_BACKLIGHT, HIGH);
+#endif
 #endif
 #endif // OPENSPRINKLER_ARDUINO_FREETRONICS_LCD
 }

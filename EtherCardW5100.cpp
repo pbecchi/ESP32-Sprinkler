@@ -850,7 +850,7 @@ uint16_t EtherCardW5100::packetLoop ( uint16_t plen )
         // Receive incoming TCP data for client
         if ( outgoing_client_state == TCP_ESTABLISHED )
 		{
-			DEBUG_PRINT('>');
+			//DEBUG_PRINT('>');
             if ( outgoing_client.available() )
             {
                 DEBUG_PRINT ( F ( "Browse URL: client received: " ) );
