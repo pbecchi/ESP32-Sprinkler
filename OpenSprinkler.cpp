@@ -1261,10 +1261,10 @@ void OpenSprinkler::begin()
 	 if(SPIFFS.begin(true))
 #endif
 	{
+		 status.has_sd = 1;
 #ifdef ESP8266
 		Dir dir = SPIFFS.openDir("/");
 		while (dir.next()) { DEBUG_PRINT(dir.fileName()); DEBUG_PRINT("  "); DEBUG_PRINTLN(dir.fileSize()); tot += dir.fileSize(); }
-		status.has_sd = 1;
 		DEBUG_PRINT("Tot.bytes="); DEBUG_PRINTLN(tot);
 		lcd.setCursor(0, YFACTOR);
 		lcd.print("Spiffs size=");

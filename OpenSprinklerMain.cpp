@@ -1032,7 +1032,7 @@ void do_loop()
                 flowcount_rt_start = flow_count;
             }
         }
-
+#endif
         // perform ntp sync
         if ( curr_time % NTP_SYNC_INTERVAL == 0 ) os.status.req_ntpsync = 1;
         perform_ntp_sync();
@@ -1040,7 +1040,7 @@ void do_loop()
         // check network connection
         if ( curr_time && ( curr_time % CHECK_NETWORK_INTERVAL==0 ) )  os.status.req_network = 1;
         check_network();
-#endif
+
 	    // check weather
         check_weather();
 		//DEBUG_PRINT(__LINE__); DEBUG_PRINT("_");
