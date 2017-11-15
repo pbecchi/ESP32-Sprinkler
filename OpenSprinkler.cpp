@@ -1606,7 +1606,7 @@ void OpenSprinkler::apply_all_station_bits()
     // each time apply_all_station_bits is called
     // we refresh the station whose index is the current time modulo MAX_NUM_STATIONS
     static byte last_sid = 0;
-    byte sid = now() % MAX_NUM_STATIONS;
+    byte sid = abs(now()) % MAX_NUM_STATIONS;
     if ( sid != last_sid )  // avoid refreshing the same station twice in a roll
     {
         last_sid = sid;
@@ -2047,6 +2047,7 @@ byte OpenSprinkler::weekday_today()
 /** Switch special station */
 void OpenSprinkler::switch_special_station ( byte sid, byte value ){
     // check station special bit
+
     if ( station_attrib_bits_read ( ADDR_NVM_STNSPE+ ( sid>>3 ) ) & ( 1<< ( sid&0x07 ) ) ){
         // read station special data from sd card
         int stepsize=sizeof ( StationSpecialData );
@@ -2531,13 +2532,9 @@ void OpenSprinkler::options_setup(){
         {
             tmp_buffer[i]=0xff;
         }
-#ifdef SG21
-		nvm_write_block(tmp_buffer, (void*)ADDR_NVM_MAS_OP, MAX_EXT_BOARDS + 1);//Master1 is set
-		nvm_write_block(tmp_buffer, (void*)ADDR_NVM_STNSEQ, MAX_EXT_BOARDS + 1);//Sequential is set
-#else
+
         nvm_write_block ( tmp_buffer, ( void* ) ADDR_NVM_MAS_OP, MAX_EXT_BOARDS+1 );
         nvm_write_block ( tmp_buffer, ( void* ) ADDR_NVM_STNSEQ, MAX_EXT_BOARDS+1 );
-#endif
 
         // 5. delete sd file
         remove_file ( wtopts_filename );

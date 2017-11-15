@@ -28,7 +28,7 @@
 #include <Arduino.h>
 #include "Config.h"
 #include "libsel.h"
-#include "Pins.h"
+//#include "Pins.h"
 /** Firmware version, hardware version, and maximal values */
 #define OS_FW_VERSION			216		// Firmware version: 216 means 2.1.6
 										// if this number is different from the one stored in non-volatile memory
@@ -151,7 +151,7 @@
 #define MAX_CLOUDURL        48    // Cloud Server url
 #else
 		#define MAX_EXT_BOARDS    6  // maximum number of exp. boards (each expands 8 stations)
-#define MAX_PROGRAMDATA     2433  // program data
+#define MAX_PROGRAMDATA     2438  // program data
 #endif
 		#define MAX_NUM_STATIONS  ((1+MAX_EXT_BOARDS)*8)  // maximum number of stations
 

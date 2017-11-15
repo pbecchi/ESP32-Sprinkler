@@ -59,7 +59,12 @@ Original Opensprinkler code commences below here
 
 //MOD_RTC
 #include <Time.h>
+#ifdef DS1307RTC==I2CRTC
 #include "i2crtc.h"
+#else
+#include <DS1307RTC.h>
+#endif
+
 
 #ifdef OPENSPRINKLER_ARDUINO
 	#include <Wire.h>
@@ -162,6 +167,7 @@ void setup()
    Alarm.alarmRepeat ( REBOOT_HR, REBOOT_MIN, REBOOT_SEC, reboot );
 #endif // OPENSPRINKLER_ARDUINO_AUTOREBOOT
    do_setup();
+   DEBUG_PRINTLN(now());
 #ifdef OTA_UPLOAD
    // Port defaults to 8266
    // ArduinoOTA.setPort(8266);
@@ -198,6 +204,7 @@ void setup()
 
 void loop()
 {
+	//if (now() % 60 == 0)DEBUG_PRINTLN(now());
 	DEBUG_COMMAND
 #ifdef OTA_UPLOAD
 		ArduinoOTA.handle();

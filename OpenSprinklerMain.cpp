@@ -440,11 +440,12 @@ void do_setup()
 	DEBUG_PRINTLN("clock...");
     setSyncInterval ( RTC_SYNC_INTERVAL ); // RTC sync interval
     // if rtc exists, sets it as time sync source
- 
+	DEBUG_PRINT(hour()); DEBUG_PRINT(":"); DEBUG_PRINTLN(minute());
 
 	setSyncProvider(RTC.get);
 	DEBUG_PRINT(hour()); DEBUG_PRINT(":"); DEBUG_PRINTLN(minute());
-
+	DEBUG_PRINT(day()); DEBUG_PRINT("-"); DEBUG_PRINT(month()); DEBUG_PRINT("-"); DEBUG_PRINTLN(year());
+	DEBUG_PRINTLN(now());
     os.lcd_print_time ( os.now_tz() ); // display time to LCD
 	DEBUG_PRINTLN("Time printed...");
 #ifdef OPENSPRINKLER_ARDUINO_HEARTBEAT

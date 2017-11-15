@@ -75,3 +75,12 @@ __vm/
 [Bb]in*/
 [Dd]ebug*/
 [Rr]elease*/
+/WiFiManager-esp32/examples/OnDemandConfigPortal/OnDemandConfigPortal.ino
+/WiFiManager-esp32/examples/AutoConnectWithTimeout/AutoConnectWithTimeout.ino
+/WiFiManager-esp32/examples/AutoConnectWithStaticIP/AutoConnectWithStaticIP.ino
+/WiFiManager-esp32/examples/AutoConnectWithReset/AutoConnectWithReset.ino
+/WiFiManager-esp32/examples/AutoConnectWithFSParametersAndCustomIP/AutoConnectWithFSParametersAndCustomIP.ino
+/WiFiManager-esp32/examples/AutoConnectWithFSParameters/AutoConnectWithFSParameters.ino
+/WiFiManager-esp32/examples/AutoConnectWithFeedbackLED/AutoConnectWithFeedbackLED.ino
+/WiFiManager-esp32/examples/AutoConnectWithFeedback/AutoConnectWithFeedback.ino
+/WiFiManager-esp32/examples/AutoConnect/AutoConnect.ino

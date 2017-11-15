@@ -102,7 +102,7 @@ This way you can use expander for all functions (interrupt donot work right now)
 //------ ESP32 basic definitions-------------------------------------------------------
 #elif defined(ESP32)
 //#define WIFIMANAGER wifimanager not supported yet Hardcoded SSID and PSW!
-#define SSID_NAME "Vodafone-Out"
+#define SSID_NAME "TP-LINK_C20B"//TP_LINK_C20B"
 #define WIFI_PSW  "paolo-48"
 #ifndef D1
  #define D2 21
@@ -505,7 +505,7 @@ This way you can use expander for all functions (interrupt donot work right now)
 #define SCL_PIN   17
 #undef WIFIMANAGER
 #undef OTA_UPLOAD
-#define DS1307RTC I2CRTC
+//#define DS1307RTC //I2CRTC
 //-------------- OLED 128*64 DISPLAY ------------------------------------------------------
 #define LCDI2C								//:i2c LCD
 #define LCD_SSD1306

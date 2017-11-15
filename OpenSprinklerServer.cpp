@@ -1870,52 +1870,115 @@ void handle_web_request ( char *p )
     //delay(50); // add a bit of delay here
 }
 
+/*--------NEW NTP code ----------*/
+WiFiUDP Udp;
 
-#if defined(ARDUINO)
+//const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
+    byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
+									// send an NTP request to the time server at the given address
+	void sendNTPpacket(IPAddress &address) {
+	memset(packetBuffer, 0, NTP_PACKET_SIZE);
+	// Initialize values needed to form NTP request
+	// (see URL above for details on the packets)
+	packetBuffer[0] = 0b11100011;   // LI, Version, Mode
+	packetBuffer[1] = 0;     // Stratum, or type of clock
+	packetBuffer[2] = 6;     // Polling Interval
+	packetBuffer[3] = 0xEC;  // Peer Clock Precision
+							 // 8 bytes of zero for Root Delay & Root Dispersion
+	packetBuffer[12] = 49;
+	packetBuffer[13] = 0x4E;
+	packetBuffer[14] = 49;
+	packetBuffer[15] = 52;
+	// all NTP fields have been given values, now
+	// you can send a packet requesting a timestamp:                 
+	Udp.beginPacket(address, 123); //NTP requests are to port 123
+	Udp.write(packetBuffer, NTP_PACKET_SIZE);
+	Udp.endPacket();
+}
+time_t getNtpTime()
+{
+	byte itry = 0;
+	while (itry++<20){
+		
+			IPAddress timeServer;
+			WiFi.hostByName("time.nist.gov", timeServer);
+			Serial.println(timeServer);
+			Serial.println("waiting for sync");
+			while (Udp.parsePacket() > 0); // discard any previously received packets
+			Serial.println("Transmit NTP Request");
+			sendNTPpacket(timeServer);
+			uint32_t beginWait = millis();
+			while (millis() - beginWait < 5000) {
+				int size = Udp.parsePacket();
+				if (size >= NTP_PACKET_SIZE) {
+					Serial.println("Receive NTP Response");
+					Udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
+					unsigned long secsSince1900;
+					// convert four bytes starting at location 40 to a long integer
+					secsSince1900 = (unsigned long)packetBuffer[40] << 24;
+					secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
+					secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
+					secsSince1900 |= (unsigned long)packetBuffer[43];
+					return secsSince1900 - 2208988800UL;// +timeZone * SECS_PER_HOUR;
+				}
+			}
+		}
+	Serial.println("No NTP Response :-(");
+	return 0; // return 0 if unable to get the time
+}
+
+
+
+
+#if defined(ARDUINOc)
 /** NTP sync request */
 time_t getNtpTime()
 {
-    byte ntpip[4] =
-    {
-        os.options[OPTION_NTP_IP1],
-        os.options[OPTION_NTP_IP2],
-        os.options[OPTION_NTP_IP3],
-        os.options[OPTION_NTP_IP4]
-    };
-    uint32_t time;
-    byte tick=0;
-    unsigned long expire;
-    do
-    {
-        ether.ntpRequest ( ntpip, ++ntpclientportL );
-        expire = millis() + 2000; // wait for at most 5 second  
-        do
-        {
-           word len = ether.packetReceive();
-            ether.packetLoop ( len );
-            if ( len > 0 && ether.ntpProcessAnswer ( &time, ntpclientportL ) )
-           
-//			word len = ether.Udp_parsePacket();
-			//DEBUG_PRINTLN(len);
-//error was on the vodafone server port forwarding
-	//		if(len>=48&& ether.ntpProcessAnswer(&time, ntpclientportL)) //min.legth 48 bytes
+	byte ntpip[4] =
+	{
+		os.options[OPTION_NTP_IP1],
+		os.options[OPTION_NTP_IP2],
+		os.options[OPTION_NTP_IP3],
+		os.options[OPTION_NTP_IP4]
+	};
+	uint32_t time;
+	byte tick = 0;
+	unsigned long expire;
+	IPAddress serverIp(ntpip[0], ntpip[1], ntpip[2], ntpip[3]);
 
-		   {
-                if ( ( time & 0x80000000UL ) ==0 )
-                {
-                    time+=2085978496;
-                }
-                else
-                {
-                    time-=2208988800UL;
-                }
-                return time;
-            }
-        }
-        while ( millis() < expire );
-        tick ++;
-    }
-    while ( tick<20 );
-    return 0;
+	do
+	{
+		for (byte i = 0; i < 3; i++)
+			ntpip[i] = serverIp[i];
+		ether.ntpRequest(ntpip, ntpclientportL);
+		expire = millis() + 4000; // wait for at most 4 second  
+		do
+		{
+			word len = ether.packetReceive();
+			ether.packetLoop(len);
+			if (len > 0 && ether.ntpProcessAnswer(&time, ntpclientportL))
+
+				//			word len = ether.Udp_parsePacket();
+							//DEBUG_PRINTLN(len);
+				//error was on the vodafone server port forwarding
+					//		if(len>=48&& ether.ntpProcessAnswer(&time, ntpclientportL)) //min.legth 48 bytes
+
+			{
+				if ((time & 0x80000000UL) == 0)
+				{
+					time += 2085978496;
+				}
+				else
+				{
+					time -= 2208988800UL;
+				}
+				return time;
+			}
+
+		} while (millis() < expire);
+		tick++;
+		WiFi.hostByName("time.nist.gov", serverIp);
+	} while (tick < 20);
+	return 0;
 }
 #endif

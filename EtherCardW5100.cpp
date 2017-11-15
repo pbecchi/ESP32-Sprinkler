@@ -966,6 +966,7 @@ int EtherCardW5100::Udp_parsePacket() { return udp_client.parsePacket(); }
 /// <returns>True (1) on success</returns>
 byte EtherCardW5100::ntpProcessAnswer ( uint32_t *time, byte dstport_l )
 {
+
     int packetSize = udp_client.parsePacket();
     if ( packetSize )
     {
@@ -993,6 +994,14 @@ byte EtherCardW5100::ntpProcessAnswer ( uint32_t *time, byte dstport_l )
         ( ( byte* ) time ) [1] = buffer[42];
         ( ( byte* ) time ) [0] = buffer[43];
 
+		unsigned long secsSince1900;
+		// convert four bytes starting at location 40 to a long integer
+		secsSince1900 = (unsigned long)buffer[40] << 24;
+		secsSince1900 |= (unsigned long)buffer[41] << 16;
+		secsSince1900 |= (unsigned long)buffer[42] << 8;
+		secsSince1900 |= (unsigned long)buffer[43];
+		DEBUG_PRINT(secsSince1900 - 2208988800UL);// + timeZone * SECS_PER_HOUR + 3600 * DayLigthST;
+		DEBUG_PRINT(":");
         DEBUG_PRINTLN ( ( uint32_t ) time );
         return 1;
     }
