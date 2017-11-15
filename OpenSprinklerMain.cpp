@@ -286,9 +286,10 @@ void ui_state_machine()
 #endif       
 				} else if (digitalRead(PIN_BUTTON_2)==0) { // if B2 is pressed while holding B1, display gateway IP
                     os.lcd_print_ip ( ether.gwip, 0 );
-                    os.lcd.setCursor ( 0, 1 );
+                    os.lcd.setCursor ( 0, 1*YFACTOR );
                     os.lcd_print_pgm ( PSTR ( "(gwip)" ) );
                     ui_state = UI_STATE_DISP_IP;
+
         } else {
 #endif
                     reset_all_stations();
@@ -302,6 +303,7 @@ void ui_state_machine()
                 os.lcd.print ( ether.hisport );
                 os.lcd_print_pgm ( PSTR ( " (osip)" ) );
                 ui_state = UI_STATE_DISP_IP;
+
             }
             break;
         case BUTTON_2:
@@ -312,16 +314,18 @@ void ui_state_machine()
     
                 if ( digitalRead ( PIN_BUTTON_1 ) ==0 ){ // if B1 is pressed while holding B2, display external IP
                     os.lcd_print_ip ( ( byte* ) ( &os.nvdata.external_ip ), 1 );
-                    os.lcd.setCursor ( 0, 1 );
+                    os.lcd.setCursor ( 0, 1*YFACTOR );
                     os.lcd_print_pgm ( PSTR ( "(eip)" ) );
                     ui_state = UI_STATE_DISP_IP;
+
         } else if (digitalRead(PIN_BUTTON_3)==0) {  // if B3 is pressed while holding B2, display last successful weather call
           os.lcd_clear();
                     os.lcd_print_time ( os.checkwt_success_lasttime );
-                    os.lcd.setCursor ( 0, 1 );
+                    os.lcd.setCursor ( 0, 1*YFACTOR );
                     os.lcd_print_pgm ( PSTR ( "(lswc)" ) );
                     ui_state = UI_STATE_DISP_IP;
-                } else {
+
+				} else {
 #endif
                     os.reboot_dev();
                 }
@@ -378,10 +382,14 @@ void ui_state_machine()
                     ProgramStruct prog;
                     pd.read ( ui_state_runprog-1, &prog );
                     os.lcd_print_line_clear_pgm ( PSTR ( " " ), 1 );
-                    os.lcd.setCursor ( 0, 1 );
+                    os.lcd.setCursor ( 0, 1 *YFACTOR);
                     os.lcd.print ( ( int ) ui_state_runprog );
                     os.lcd_print_pgm ( PSTR ( ". " ) );
                     os.lcd.print ( prog.name );
+
+#ifdef LCD_SSD1306
+					os.lcd.display();
+#endif
         } else {
                     os.lcd_print_line_clear_pgm ( PSTR ( "0. Test (1 min)" ), 1 );
                 }
@@ -591,7 +599,7 @@ void do_loop()
         handle_web_request ( ( char* ) Ethernet::buffer+pos );
 #endif
     }
-//	DEBUG_PRINT('-'); DEBUG_PRINT(__LINE__);
+//	DEBUG_PRINT('-'); DEBUG_PRINT(__LINE__)te
 #ifdef OPENSPRINKLER_ARDUINO_WDT
     wdt_reset();  // reset watchdog timer
     wdt_timeout = 0;
