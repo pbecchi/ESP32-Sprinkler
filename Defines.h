@@ -28,7 +28,7 @@
 #include <Arduino.h>
 #include "Config.h"
 #include "libsel.h"
-//#include "Pins.h"
+#include "Pins.h"
 /** Firmware version, hardware version, and maximal values */
 #define OS_FW_VERSION			216		// Firmware version: 216 means 2.1.6
 										// if this number is different from the one stored in non-volatile memory
