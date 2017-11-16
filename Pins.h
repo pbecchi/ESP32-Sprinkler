@@ -505,7 +505,7 @@ This way you can use expander for all functions (interrupt donot work right now)
 #define SCL_PIN   17
 #undef WIFIMANAGER
 #undef OTA_UPLOAD
-//#define DS1307RTC //I2CRTC
+#define DS1307RTC I2CRTC
 //-------------- OLED 128*64 DISPLAY ------------------------------------------------------
 #define LCDI2C								//:i2c LCD
 #define LCD_SSD1306
