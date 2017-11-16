@@ -514,7 +514,7 @@ byte OpenSprinkler::options[] =
     31,
 #endif
     OS_HW_VERSION,
-    0,  // number of 8-station extension board. 0: no extension boards
+    1,  // number of 8-station extension board. 0: no extension boards
     1,  // the option 'sequential' is now retired
     128,// station delay time (-59 minutes to 59 minutes).
     0,  // index of master station. 0: no master station

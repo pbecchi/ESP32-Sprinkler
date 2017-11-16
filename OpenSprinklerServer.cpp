@@ -1733,6 +1733,9 @@ const char _url_keys[] /*PROGMEM*/ =
     "dp"
     "cp"
     "cr"
+#ifdef OS217
+  "mp"
+#endif
     "up"
     "jp"
     "co"
@@ -1758,7 +1761,7 @@ URLHandler urls[] =
     server_change_program,  // cp
     server_change_runonce,  // cr
 #ifdef OS217
-  server_manual_program,  // mp  
+    server_manual_program,  // mp  
 #endif
     server_moveup_program,  // up
     server_json_programs,   // jp
@@ -1784,12 +1787,12 @@ void handle_web_request ( char *p )
     ether.httpServerReplyAck();
 #endif
     rewind_ether_buffer();
-	DEBUG_PRINT("web req ");
+	
     // assume this is a GET request
     // GET /xx?xxxx
     char *com = p+5;
     char *dat = com+3;
-	
+	DEBUG_PRINT("web req "); DEBUG_PRINT(com[0]); DEBUG_PRINTLN(com[1]);
     if ( com[0]==' '||com[0]==0 )
     {   
 		DEBUG_PRINTLN("home page");

@@ -592,8 +592,10 @@ void do_loop()
 																			 // ====== Process Ethernet packets ======
 #if defined(ARDUINO)  // Process Ethernet packets for Arduino
     uint16_t pos=ether.packetLoop ( ether.packetReceive() );
+	
     if ( pos>0 ) { // packet received
 #ifdef OPENSPRINKLER_ARDUINO_W5100
+				   //	DEBUG_PRINT(pos); DEBUG_PRINT("BUUFER"); /*for (byte j = 0; j < strlen((char*)EtherCardW5100::buffer); j++) */DEBUG_PRINTLN((char*)EtherCardW5100::buffer);
         handle_web_request ( ( char* ) EtherCardW5100::buffer + pos );
 #else
         handle_web_request ( ( char* ) Ethernet::buffer+pos );

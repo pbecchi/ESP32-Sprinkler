@@ -242,7 +242,7 @@
 #endif
 
 /** Default password, location string, weather key, script urls */
-#define DEFAULT_PASSWORD          "opendoor"
+#define DEFAULT_PASSWORD          "a6d82bced638de3def1e9bbb4983225c"
 #define DEFAULT_LOCATION          "Boston,MA"
 #define DEFAULT_WEATHER_KEY       "e409b2aeaa5e3ffe"	// replace this key with your own
 #define DEFAULT_JAVASCRIPT_URL    "https://ui.opensprinkler.com/js"
@@ -613,7 +613,8 @@ extern byte DB;
 //         opensprinklermain   2
 //         ethercardW5100	   4
 //         weather            16
-
+//			opensprinkler      1
+//         SG21 sensores      64
 #define DB_MASK 0xFF
 #define DEBUG_COMMAND  if(Serial.available()){char c=Serial.read();DB=0;  while(Serial.available()){if(c>='0'){DB=DB*10;DB+=c-'0';}c=Serial.read();}Serial.print("->");Serial.println(DB);}
 

@@ -885,9 +885,10 @@ uint16_t EtherCardW5100::packetLoop ( uint16_t plen )
         }
 
         // Check for renewal of DHCP lease
-        if ( using_dhcp )
+  
 #if !defined(ESP8266) && !defined(ESP32)
-            ETHERNE.maintain();  
+		if (using_dhcp)
+		ETHERNE.maintain();  
 #endif
         return 0;
     }
@@ -994,14 +995,6 @@ byte EtherCardW5100::ntpProcessAnswer ( uint32_t *time, byte dstport_l )
         ( ( byte* ) time ) [1] = buffer[42];
         ( ( byte* ) time ) [0] = buffer[43];
 
-		unsigned long secsSince1900;
-		// convert four bytes starting at location 40 to a long integer
-		secsSince1900 = (unsigned long)buffer[40] << 24;
-		secsSince1900 |= (unsigned long)buffer[41] << 16;
-		secsSince1900 |= (unsigned long)buffer[42] << 8;
-		secsSince1900 |= (unsigned long)buffer[43];
-		DEBUG_PRINT(secsSince1900 - 2208988800UL);// + timeZone * SECS_PER_HOUR + 3600 * DayLigthST;
-		DEBUG_PRINT(":");
         DEBUG_PRINTLN ( ( uint32_t ) time );
         return 1;
     }
@@ -1248,9 +1241,10 @@ uint16_t EtherCardW5100::packetReceive()
     // listen for incoming clients
     // ** remember this client object is different from the W5100client used for tcp requests **
     incoming_client = incoming_server.available();
-    if ( incoming_client )
-    {
-		DEBUG_PRINTLN(incoming_client);
+	delay(100);
+//	incoming_server.setNoDelay(true);
+	if (incoming_client) {
+		DEBUG_PRINTLN("incoming_client-----------------start");
 
         // set all bytes in the buffer to 0 - add a
         // byte to simulate space for the TCP header
@@ -1260,25 +1254,23 @@ uint16_t EtherCardW5100::packetReceive()
 
         DEBUG_PRINT ( F ( "Server request: " ) );
 
-        while ( incoming_client.connected() && ( i < ETHER_BUFFER_SIZE ) )
-        {
+		while (incoming_client.connected() && (i < ETHER_BUFFER_SIZE)) {
             if ( incoming_client.available() )
                 buffer[i] = incoming_client.read();
 
             // print readable ascii characters
-            if ( buffer[i] >= 0x08 && buffer[i] <= 0x0D )
-            {
+			if (buffer[i] >= 0x08 && buffer[i] <= 0x0D) {
                 DEBUG_PRINT ( F ( " " ) );		// substitute a space so less rows in serial output
-            }
-            else if ( buffer[i] > 0x1F )
-            {
+			} else if (buffer[i] > 0x1F) {
                 DEBUG_PRINT ( ( char ) buffer[i] );
             }
 
             i++;
         }
         DEBUG_PRINTLN ( F ( "" ) );
+		incoming_client.flush();   //flush input to avoid remain available
         return i;
+
     }
     else
         return 0;
@@ -1300,8 +1292,8 @@ void EtherCardW5100::httpServerReply ( word dlen )
     incoming_client.print ( ( char* ) bfill.buffer() );
 
     // close the connection:
-    delay ( 1 ); // give the web browser time to receive the data
-    incoming_client.stop();
+//    delay ( 1 ); // give the web browser time to receive the data
+//    incoming_client.stop();
 }
 
 /// <summary>
@@ -1319,12 +1311,13 @@ void EtherCardW5100::httpServerReply_with_flags ( uint16_t dlen, uint8_t flags )
     // Same as above - ignore dlen & just add a null termination and print it out to the client
     buffer[bfill.position() + TCP_OFFSET] = '\0';
     incoming_client.print ( ( char* ) bfill.buffer() );
-    delay ( 1 ); // give the web browser time to receive the data
+    delay ( 20 ); // give the web browser time to receive the data
 
     if ( flags&TCP_FLAGS_FIN_V != 0 ) // final packet in the stream
     {
         // close the connection:
         incoming_client.stop();
+		DEBUG_PRINTLN("Client STOP----------------------------");
     }
 
     /* // Original Code from tcpip.cpp
@@ -1464,11 +1457,42 @@ void EtherCardW5100::browseUrl ( const char *urlbuf, const char *urlbuf_varpart,
         DEBUG_PRINT ( hisport );
         DEBUG_PRINTLN ( F ( "(OK)" ) );
         outgoing_client_state = TCP_ESTABLISHED;
+#ifndef MOD1
+		byte w = 0; ////_wait to receive from server___________________________________
+			while (!outgoing_client.available() && w++ < 255) delay(40);
+			if (w < 255) {
+				DEBUG_PRINT(F("Browse URL: client received: "));
+
+				// set all bytes in the buffer to 0 - add a
+				// byte to simulate space for the TCP header
+				memset(buffer, 0, ETHER_BUFFER_SIZE);
+				memset(buffer, ' ', TCP_OFFSET);
+				len = TCP_OFFSET;
+
+				while (outgoing_client.available() && (len < ETHER_BUFFER_SIZE)) {
+					buffer[len] = outgoing_client.read();
+					DEBUG_PRINT(char(buffer[len] & 0xFF));
+					len++;
+				}
+				DEBUG_PRINTLN(F(""));
+
+				// send data to the callback
+				if (len > TCP_OFFSET) {
+					(*client_browser_cb) (0, TCP_OFFSET, len);
+
+				}
+			}
+				outgoing_client_state = TCP_CLOSED;
+				outgoing_client.stop();
+//release incoming server if lost......................................
+			
+#endif
     }
     else
     {
         DEBUG_PRINTLN ( F ( "Browse URL: failed (could not connect)" ) );
         outgoing_client_state = TCP_CLOSED;
+		outgoing_client.stop();
     }
 }
 
@@ -1517,7 +1541,7 @@ uint8_t EtherCardW5100::packetLoopIcmpCheckReply ( const uint8_t *ip_monitoredho
 #ifdef ESP8266
 	return Ping.ping(IPAddress(ip_monitoredhost[0], ip_monitoredhost[1], ip_monitoredhost[2], ip_monitoredhost[3]));
 #elif defined(ESP32)
-		if (WiFi.status() != WL_CONNECTED) return true; else return false;
+	if (WiFi.status() == WL_CONNECTED) return true; else return false;
 #endif
 #else
     if ( ping.asyncComplete ( ping_result ) )
@@ -1601,9 +1625,7 @@ static void set_seq()
 /// <param name="name">Host name to lookup</param>
 /// <param name="fromRam">NOT IMPLEMENTED (Look up cached name. Default = false)</param>
 /// <returns>True on success. </returns>
-#ifdef ESP32
- #include <lwip/netdb.h> //needed for gethostbyname()
-#endif
+
 bool EtherCardW5100::dnsLookup(const char* name, bool fromRam)
 {
 
@@ -1613,15 +1635,15 @@ bool EtherCardW5100::dnsLookup(const char* name, bool fromRam)
 
 
 #if  defined(ESP8266)     //use WiFi.hostByName
+	int result = 0;
 	dns_client.begin(ETHERNE.gatewayIP());   ////--may not be necessary
 	int result = ETHERNE.hostByName(name, serverIP);
 #elif defined(ESP32)
 
 	int result = 0;	////---
-	struct hostent *host;
-	host = gethostbyname(name);
-	if (host->h_addr[0] > 0)result = 1;
-	serverIP = IPAddress(host->h_addr[0], host->h_addr[1], host->h_addr[2], host->h_addr[3]);
+	
+	WiFi.hostByName(name, serverIP);
+
 #else
 	dns_client.begin(Ethernet.dnsServerIP()); 
 	int result = dns_client.getHostByName(name, serverIP);
