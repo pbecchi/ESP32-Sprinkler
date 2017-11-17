@@ -30,9 +30,13 @@
 #include "libsel.h"
 #include "Pins.h"
 /** Firmware version, hardware version, and maximal values */
+
 #define OS_FW_VERSION			216		// Firmware version: 216 means 2.1.6
 										// if this number is different from the one stored in non-volatile memory
 										// a device reset will be automatically triggered
+#ifdef OS217
+ #define OS_FW_VERSION    217
+#endif
 
 #define OS_FW_MINOR				1		// Firmware minor version
 
@@ -608,6 +612,7 @@ typedef enum
 #define SERIAL_DEBUG
 #if defined(SERIAL_DEBUG) /** Serial debug functions */
 extern byte DB;
+extern int nDB;
 // db_mask opensprinklerserver 32
 //         utils               8
 //         opensprinklermain   2
@@ -616,7 +621,7 @@ extern byte DB;
 //			opensprinkler      1
 //         SG21 sensores      64
 #define DB_MASK 0xFF
-#define DEBUG_COMMAND  if(Serial.available()){char c=Serial.read();DB=0;  while(Serial.available()){if(c>='0'){DB=DB*10;DB+=c-'0';}c=Serial.read();}Serial.print("->");Serial.println(DB);}
+#define DEBUG_COMMAND  if(Serial.available()){char c=Serial.read(); nDB=0;  while(Serial.available()){if(c>='0'){nDB=nDB*10;nDB+=c-'0';}c=Serial.read();}Serial.print("->");Serial.println(nDB);if(nDB<256)DB=nDB;}
 
 #define DEBUG_PRINTF(x,y)   if(DB&DB_MASK) Serial.print(x,y)
 #define DEBUG_PRINT(x)  if(DB&DB_MASK) Serial.print(x)

@@ -151,7 +151,7 @@ Original Opensprinkler code commences below here
 //extern OpenSprinkler os;
 //CLUP
 byte DB = 0xFF;     ////________________debug print everywhere_________________
-
+int nDB = 0;        ////-----------------for GPIO debugging-------------------
 void do_setup();
 void do_loop();
 

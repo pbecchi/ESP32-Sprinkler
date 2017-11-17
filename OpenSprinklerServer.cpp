@@ -1235,150 +1235,147 @@ byte server_change_scripturl ( char *p )
  * wtkey: weather underground api key
  * ttt: manual time (applicable only if ntp=0)
  */
-byte server_change_options ( char *p )
-{
-    // temporarily save some old options values
-    bool time_change = false;
-    bool weather_change = false;
-    bool network_change = false;
+byte server_change_options(char *p) {
+	// temporarily save some old options values
+	bool time_change = false;
+	bool weather_change = false;
+	bool network_change = false;
 
-    // !!! p and bfill share the same buffer, so don't write
-    // to bfill before you are done analyzing the buffer !!!
-    // process option values
-    byte err = 0;
-    byte prev_value;
-    byte max_value;
-    for ( byte oid=0; oid<NUM_OPTIONS; oid++ )
-    {
-        //if ((os.options[oid].flag&OPFLAG_WEB_EDIT)==0) continue;
+	// !!! p and bfill share the same buffer, so don't write
+	// to bfill before you are done analyzing the buffer !!!
+	// process option values
+	byte err = 0;
+	byte prev_value;
+	byte max_value;
+	for (byte oid = 0; oid < NUM_OPTIONS; oid++) {
+		//if ((os.options[oid].flag&OPFLAG_WEB_EDIT)==0) continue;
 
-        // skip options that cannot be set through /co command
-        if ( oid==OPTION_RESET || oid==OPTION_DEVICE_ENABLE ||
-                oid==OPTION_FW_VERSION || oid==OPTION_HW_VERSION ||
-                oid==OPTION_FW_MINOR || oid==OPTION_SEQUENTIAL_RETIRED ||
-                oid==OPTION_REMOTE_EXT_MODE )
-            continue;
-        prev_value = os.options[oid];
-        max_value = pgm_read_byte ( op_max+oid );
-        if ( max_value==1 )  os.options[oid] = 0; // set a bool variable to 0 first
-        char tbuf2[5] = {'o', 0, 0, 0, 0};
-        itoa ( oid, tbuf2+1, 10 );
-        if ( findKeyVal ( p, tmp_buffer, TMP_BUFFER_SIZE, tbuf2 ) )
-        {
-            if ( max_value==1 )
-            {
-                os.options[oid] = 1;  // if the bool variable is detected, set to 1
-            }
-            else
-            {
-                int32_t v = atol ( tmp_buffer );
-                if ( oid==OPTION_MASTER_OFF_ADJ || oid==OPTION_MASTER_OFF_ADJ_2 )
-                {
-                    v+=60;   // master off time
-                }
-                if ( oid==OPTION_STATION_DELAY_TIME )
-                {
-                    v=water_time_encode_signed ( ( int16_t ) v );
-                } // encode station delay time
-#if defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__)
-                if ( os.hw_type==HW_TYPE_DC && oid==OPTION_BOOST_TIME )
-                {
-                    v>>=2;
-                }
+		// skip options that cannot be set through /co command
+		if (oid == OPTION_RESET || oid == OPTION_DEVICE_ENABLE ||
+			oid == OPTION_FW_VERSION || oid == OPTION_HW_VERSION ||
+			oid == OPTION_FW_MINOR || oid == OPTION_SEQUENTIAL_RETIRED ||
+			oid == OPTION_REMOTE_EXT_MODE)
+			continue;
+		prev_value = os.options[oid];
+		max_value = pgm_read_byte(op_max + oid);
+		if (max_value == 1)  os.options[oid] = 0; // set a bool variable to 0 first
+		char tbuf2[5] = { 'o', 0, 0, 0, 0 };
+		itoa(oid, tbuf2 + 1, 10);
+		if (findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, tbuf2)) {
+			if (max_value == 1) {
+				os.options[oid] = 1;  // if the bool variable is detected, set to 1
+			} else {
+				int32_t v = atol(tmp_buffer);
+#ifdef OS217
+		    if (oid==OPTION_MASTER_OFF_ADJ || oid==OPTION_MASTER_OFF_ADJ_2 ||
+		        oid==OPTION_MASTER_ON_ADJ  || oid==OPTION_MASTER_ON_ADJ_2  ||
+		        oid==OPTION_STATION_DELAY_TIME) {
+		      v=water_time_encode_signed(v);
+#else
+				if (oid == OPTION_MASTER_OFF_ADJ || oid == OPTION_MASTER_OFF_ADJ_2) {
+					v += 60;   // master off time
+				}
+				if (oid == OPTION_STATION_DELAY_TIME) {
+					v = water_time_encode_signed((int16_t)v);
 #endif
-                if ( v>=0 && v<=max_value )
-                {
-                    os.options[oid] = v;
-                }
-                else
-                {
-                    err = 1;
-                }
-            }
-        }
-        if ( os.options[oid] != prev_value )  	// if value has changed
-        {
-            if ( oid==OPTION_TIMEZONE || oid==OPTION_USE_NTP )    time_change = true;
-            if ( oid>=OPTION_NTP_IP1 && oid<=OPTION_NTP_IP4 )     time_change = true;
-            if ( oid>=OPTION_USE_DHCP && oid<=OPTION_HTTPPORT_1 ) network_change = true;
-            if ( oid==OPTION_DEVICE_ID )  network_change = true;
-            if ( oid==OPTION_USE_WEATHER ) weather_change = true;
-        }
-    }
+				} // encode station delay time
+#if defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__)
+				if (os.hw_type == HW_TYPE_DC && oid == OPTION_BOOST_TIME) {
+					v >>= 2;
+				}
+#endif
+				if (v >= 0 && v <= max_value) {
+					os.options[oid] = v;
+				} else {
+					err = 1;
+					DEBUG_PRINTLN(); DEBUG_PRINT(oid); DEBUG_PRINT(" "); DEBUG_PRINT(max_value); DEBUG_PRINT(">");DEBUG_PRINTLN(v);
+				}
+			}
+		}
+		if (os.options[oid] != prev_value)  	// if value has changed
+		{
+			if (oid == OPTION_TIMEZONE || oid == OPTION_USE_NTP)    time_change = true;
+			if (oid >= OPTION_NTP_IP1 && oid <= OPTION_NTP_IP4)     time_change = true;
+			if (oid >= OPTION_USE_DHCP && oid <= OPTION_HTTPPORT_1) network_change = true;
+			if (oid == OPTION_DEVICE_ID)  network_change = true;
+			if (oid == OPTION_USE_WEATHER) weather_change = true;
+		}
+	}
 
-    if ( findKeyVal ( p, tmp_buffer, TMP_BUFFER_SIZE, PSTR ( "loc" ), true ) )
-    {
-        urlDecode ( tmp_buffer );
-        tmp_buffer[MAX_LOCATION-1]=0;   // make sure we don't exceed the maximum size
-        if ( strcmp_to_nvm ( tmp_buffer, ADDR_NVM_LOCATION ) ) // if location has changed
-        {
-            nvm_write_block ( tmp_buffer, ( void* ) ADDR_NVM_LOCATION, strlen ( tmp_buffer )+1 );
-            weather_change = true;
-        }
-    }
-    uint8_t keyfound = 0;
-    if ( findKeyVal ( p, tmp_buffer, TMP_BUFFER_SIZE, PSTR ( "wtkey" ), true, &keyfound ) )
-    {
-        urlDecode ( tmp_buffer );
-        tmp_buffer[MAX_WEATHER_KEY-1]=0;
-        if ( strcmp_to_nvm ( tmp_buffer, ADDR_NVM_WEATHER_KEY ) ) // if weather key has changed
-        {
-            nvm_write_block ( tmp_buffer, ( void* ) ADDR_NVM_WEATHER_KEY, strlen ( tmp_buffer )+1 );
-            weather_change = true;
-        }
-    }
-    else if ( keyfound )
-    {
-        tmp_buffer[0]=0;
-        nvm_write_block ( tmp_buffer, ( void* ) ADDR_NVM_WEATHER_KEY, strlen ( tmp_buffer )+1 );
-    }
-    // if not using NTP and manually setting time
-    if ( !os.options[OPTION_USE_NTP] && findKeyVal ( p, tmp_buffer, TMP_BUFFER_SIZE, PSTR ( "ttt" ), true ) )
-    {
-        unsigned long t;
-        t = atol ( tmp_buffer );
-        // before chaging time, reset all stations to avoid messing up with timing
-        reset_all_stations_immediate();
+	if (findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, PSTR("loc"), true)) {
+		urlDecode(tmp_buffer);
+		tmp_buffer[MAX_LOCATION - 1] = 0;   // make sure we don't exceed the maximum size
+		if (strcmp_to_nvm(tmp_buffer, ADDR_NVM_LOCATION)) { // if location has changed
+		
+			nvm_write_block(tmp_buffer, (void*)ADDR_NVM_LOCATION, strlen(tmp_buffer) + 1);
+			weather_change = true;
+		}
+	}
+	uint8_t keyfound = 0;
+	if (findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, PSTR("wtkey"), true, &keyfound)) {
+		urlDecode(tmp_buffer);
+		tmp_buffer[MAX_WEATHER_KEY - 1] = 0;
+		if (strcmp_to_nvm(tmp_buffer, ADDR_NVM_WEATHER_KEY)) { // if weather key has changed
+		
+			nvm_write_block(tmp_buffer, (void*)ADDR_NVM_WEATHER_KEY, strlen(tmp_buffer) + 1);
+			weather_change = true;
+		}
+	} else if (keyfound) {
+		tmp_buffer[0] = 0;
+		nvm_write_block(tmp_buffer, (void*)ADDR_NVM_WEATHER_KEY, strlen(tmp_buffer) + 1);
+	}
+#ifdef OS217
+  keyfound = 0;
+  if (findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, PSTR("ifkey"), true, &keyfound)) {
+    urlDecode(tmp_buffer);
+    tmp_buffer[TMP_BUFFER_SIZE-1]=0;
+///t    write_to_file(ifkey_filename, tmp_buffer, strlen(tmp_buffer));
+  } else if (keyfound) {
+    tmp_buffer[0]=0;
+///t    write_to_file(ifkey_filename, tmp_buffer, strlen(tmp_buffer));
+  }  
+#endif
+	// if not using NTP and manually setting time
+	if (!os.options[OPTION_USE_NTP] && findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, PSTR("ttt"), true)) {
+		unsigned long t;
+		t = atol(tmp_buffer);
+		// before chaging time, reset all stations to avoid messing up with timing
+		reset_all_stations_immediate();
 #if defined(ARDUINO)
-        setTime ( t );
+		setTime(t);
 
 		RTC.set(t);
 
 #endif
-    }
-    if ( findKeyVal ( p, tmp_buffer, TMP_BUFFER_SIZE, PSTR ( "wto" ), true ) )
-    {
-        urlDecode ( tmp_buffer );
-        tmp_buffer[TMP_BUFFER_SIZE]=0;
-        // store weather key
+	}
+	if (findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, PSTR("wto"), true)) {
+		urlDecode(tmp_buffer);
+		tmp_buffer[TMP_BUFFER_SIZE] = 0;
+		// store weather key
 		DEBUG_PRINT("WW_URL "); DEBUG_PRINTLN(tmp_buffer);
-        write_to_file ( wtopts_filename, tmp_buffer, strlen ( tmp_buffer ) );
-        weather_change = true;
-    }
-    if ( err )
-    {
-        return HTML_DATA_OUTOFBOUND;
-    }
+		write_to_file(wtopts_filename, tmp_buffer, strlen(tmp_buffer));
+		weather_change = true;
+	}
+	if (err) {
+		return HTML_DATA_OUTOFBOUND;
+	}
 
-    os.options_save();
+	os.options_save();
 
-    if ( time_change )
-    {
-        os.status.req_ntpsync = 1;
-    }
+	if (time_change) {
+		os.status.req_ntpsync = 1;
+	}
 
-    if ( weather_change )
-    {
-        os.checkwt_lasttime = 0;  // force weather update
-    }
+	if (weather_change) {
+		os.checkwt_lasttime = 0;  // force weather update
+	}
 
-    if ( network_change )
-    {
-        // network related options have changed
-        // this would require a restart to take effect
-    }
+	if (network_change) {
+		// network related options have changed
+		// this would require a restart to take effect
+	}
 
-    return HTML_SUCCESS;
+	return HTML_SUCCESS;
 }
 
 /**
@@ -1389,27 +1386,22 @@ byte server_change_options ( char *p )
  * npw: new password
  * cpw: confirm new password
  */
-byte server_change_password ( char *p )
-{
-    if ( findKeyVal ( p, tmp_buffer, TMP_BUFFER_SIZE, PSTR ( "npw" ), true ) )
-    {
-        char tbuf2[TMP_BUFFER_SIZE];
-        if ( findKeyVal ( p, tbuf2, TMP_BUFFER_SIZE, PSTR ( "cpw" ), true ) && strncmp ( tmp_buffer, tbuf2, MAX_USER_PASSWORD ) == 0 )
-        {
+byte server_change_password(char *p) {
+	if (findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, PSTR("npw"), true)) {
+		char tbuf2[TMP_BUFFER_SIZE];
+		if (findKeyVal(p, tbuf2, TMP_BUFFER_SIZE, PSTR("cpw"), true) && strncmp(tmp_buffer, tbuf2, MAX_USER_PASSWORD) == 0) {
 #if defined(DEMO)
-            return HTML_SUCCESS;
+			return HTML_SUCCESS;
 #endif
-            urlDecode ( tmp_buffer );
-            tmp_buffer[MAX_USER_PASSWORD-1]=0;  // make sure we don't exceed the maximum size
-            nvm_write_block ( tmp_buffer, ( void* ) ADDR_NVM_PASSWORD, strlen ( tmp_buffer )+1 );
-            return HTML_SUCCESS;
-        }
-        else
-        {
-            return HTML_MISMATCH;
-        }
-    }
-    return HTML_DATA_MISSING;
+			urlDecode(tmp_buffer);
+			tmp_buffer[MAX_USER_PASSWORD - 1] = 0;  // make sure we don't exceed the maximum size
+			nvm_write_block(tmp_buffer, (void*)ADDR_NVM_PASSWORD, strlen(tmp_buffer) + 1);
+			return HTML_SUCCESS;
+		} else {
+			return HTML_MISMATCH;
+		}
+	}
+	return HTML_DATA_MISSING;
 }
 
 void server_json_status_main()
@@ -1443,83 +1435,67 @@ byte server_json_status ( char *p )
  * en: enable (0 or 1)
  * t:  timer (required if en=1)
  */
-byte server_change_manual ( char *p )
-{
-    int sid=-1;
-    if ( findKeyVal ( p, tmp_buffer, TMP_BUFFER_SIZE, PSTR ( "sid" ), true ) )
-    {
-        sid=atoi ( tmp_buffer );
-        if ( sid<0 || sid>=os.nstations ) return HTML_DATA_OUTOFBOUND;
-    }
-    else
-    {
-        return HTML_DATA_MISSING;
-    }
+byte server_change_manual(char *p) {
+	int sid = -1;
+	if (findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, PSTR("sid"), true)) {
+		sid = atoi(tmp_buffer);
+		if (sid < 0 || sid >= os.nstations) return HTML_DATA_OUTOFBOUND;
+	} else {
+		return HTML_DATA_MISSING;
+	}
 
-    byte en=0;
-    if ( findKeyVal ( p, tmp_buffer, TMP_BUFFER_SIZE, PSTR ( "en" ), true ) )
-    {
-        en=atoi ( tmp_buffer );
-    }
-    else
-    {
-        return HTML_DATA_MISSING;
-    }
+	byte en = 0;
+	if (findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, PSTR("en"), true)) {
+		en = atoi(tmp_buffer);
+	} else {
+		return HTML_DATA_MISSING;
+	}
 
-    uint16_t timer=0;
-    unsigned long curr_time = os.now_tz();
-    if ( en ) // if turning on a station, must provide timer
-    {
-        if ( findKeyVal ( p, tmp_buffer, TMP_BUFFER_SIZE, PSTR ( "t" ), true ) )
-        {
-            timer= ( uint16_t ) atol ( tmp_buffer );
-            if ( timer==0 || timer>64800 )
-            {
-                return HTML_DATA_OUTOFBOUND;
-            }
-            // schedule manual station
-            // skip if the station is a master station
-            // (because master cannot be scheduled independently)
-            byte bid = sid>>3;
-            byte s = sid&0x07;
-            if ( ( os.status.mas==sid+1 ) || ( os.status.mas2==sid+1 ) )
-                return HTML_NOT_PERMITTED;
+	uint16_t timer = 0;
+	unsigned long curr_time = os.now_tz();
+	if (en) // if turning on a station, must provide timer
+	{
+		if (findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, PSTR("t"), true)) {
+			timer = (uint16_t)atol(tmp_buffer);
+			if (timer == 0 || timer > 64800) {
+				return HTML_DATA_OUTOFBOUND;
+			}
+			// schedule manual station
+			// skip if the station is a master station
+			// (because master cannot be scheduled independently)
+			byte bid = sid >> 3;
+			byte s = sid & 0x07;
+			if ((os.status.mas == sid + 1) || (os.status.mas2 == sid + 1))
+				return HTML_NOT_PERMITTED;
 
-            RuntimeQueueStruct *q = NULL;
-            byte sqi = pd.station_qid[sid];
-            // check if the station already has a schedule
-            if ( sqi!=0xFF )  // if we, we will overwrite the schedule
-            {
-                q = pd.queue+sqi;
-            }
-            else      // otherwise create a new queue element
-            {
-                q = pd.enqueue();
-            }
-            // if the queue is not full
-            if ( q )
-            {
-                q->st = 0;
-                q->dur = timer;
-                q->sid = sid;
-                q->pid = 99;  // testing stations are assigned program index 99
-                schedule_all_stations ( curr_time );
-            }
-            else
-            {
-                return HTML_NOT_PERMITTED;
-            }
-        }
-        else
-        {
-            return HTML_DATA_MISSING;
-        }
-    }
-    else      // turn off station
-    {
-        turn_off_station ( sid, curr_time );
-    }
-    return HTML_SUCCESS;
+			RuntimeQueueStruct *q = NULL;
+			byte sqi = pd.station_qid[sid];
+			// check if the station already has a schedule
+			if (sqi != 0xFF)  // if we, we will overwrite the schedule
+			{
+				q = pd.queue + sqi;
+			} else      // otherwise create a new queue element
+			{
+				q = pd.enqueue();
+			}
+			// if the queue is not full
+			if (q) {
+				q->st = 0;
+				q->dur = timer;
+				q->sid = sid;
+				q->pid = 99;  // testing stations are assigned program index 99
+				schedule_all_stations(curr_time);
+			} else {
+				return HTML_NOT_PERMITTED;
+			}
+		} else {
+			return HTML_DATA_MISSING;
+		}
+	} else      // turn off station
+	{
+		turn_off_station(sid, curr_time);
+	}
+	return HTML_SUCCESS;
 }
 
 /**
@@ -1535,141 +1511,128 @@ byte server_change_manual ( char *p )
  *        rs, rd, wl
  *        if unspecified, output all records
  */
-byte server_json_log ( char *p )
-{
+byte server_json_log(char *p) {
 
 #if defined(ARDUINO)
-    // if no sd card, return false
-    if ( !os.status.has_sd )  return HTML_PAGE_NOT_FOUND;
+	// if no sd card, return false
+	if (!os.status.has_sd)  return HTML_PAGE_NOT_FOUND;
 #endif
 
-    unsigned int start, end;
+	unsigned int start, end;
 
-    // past n day history
-    if ( findKeyVal ( p, tmp_buffer, TMP_BUFFER_SIZE, PSTR ( "hist" ), true ) )
-    {
-        int hist = atoi ( tmp_buffer );
-        if ( hist< 0 || hist > 365 ) return HTML_DATA_OUTOFBOUND;
-        end = os.now_tz() / 86400L;
-        start = end - hist;
-    }
-    else
-    {
-        if ( !findKeyVal ( p, tmp_buffer, TMP_BUFFER_SIZE, PSTR ( "start" ), true ) )
-            return HTML_DATA_MISSING;
-        start = atol ( tmp_buffer ) / 86400L;
+	// past n day history
+	if (findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, PSTR("hist"), true)) {
+		int hist = atoi(tmp_buffer);
+		if (hist < 0 || hist > 365) return HTML_DATA_OUTOFBOUND;
+		end = os.now_tz() / 86400L;
+		start = end - hist;
+	} else {
+		if (!findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, PSTR("start"), true))
+			return HTML_DATA_MISSING;
+		start = atol(tmp_buffer) / 86400L;
 
-        if ( !findKeyVal ( p, tmp_buffer, TMP_BUFFER_SIZE, PSTR ( "end" ), true ) )
-            return HTML_DATA_MISSING;
-        end = atol ( tmp_buffer ) / 86400L;
+		if (!findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, PSTR("end"), true))
+			return HTML_DATA_MISSING;
+		end = atol(tmp_buffer) / 86400L;
 
-        // start must be prior to end, and can't retrieve more than 365 days of data
-        if ( ( start>end ) || ( end-start ) >365 )  return HTML_DATA_OUTOFBOUND;
-    }
+		// start must be prior to end, and can't retrieve more than 365 days of data
+		if ((start > end) || (end - start) > 365)  return HTML_DATA_OUTOFBOUND;
+	}
 
-    // extract the type parameter
-    char type[4] = {0};
-    bool type_specified = false;
-    if ( findKeyVal ( p, type, 4, PSTR ( "type" ), true ) )
-        type_specified = true;
+	// extract the type parameter
+	char type[4] = { 0 };
+	bool type_specified = false;
+	if (findKeyVal(p, type, 4, PSTR("type"), true))
+		type_specified = true;
 
-    print_json_header ( false );
-    bfill.emit_p ( PSTR ( "[" ) );
+	print_json_header(false);
+	bfill.emit_p(PSTR("["));
 
-    bool comma = 0;
-    for ( int i=start; i<=end; i++ )
-    {
-        itoa ( i, tmp_buffer, 10 );
+	bool comma = 0;
+	for (int i = start; i <= end; i++) {
+		itoa(i, tmp_buffer, 10);
 
-        make_logfile_name ( tmp_buffer );
+		make_logfile_name(tmp_buffer);
 
 #if defined(ARDUINO)  // prepare to open log file for Arduino
 #if !defined(ESP8266) && !defined(ESP32)
-        if ( !sd.exists ( tmp_buffer ) ) continue;
-        SdFile file;
-        file.open ( tmp_buffer, O_READ );
+		if (!sd.exists(tmp_buffer)) continue;
+		SdFile file;
+		file.open(tmp_buffer, O_READ);
 #else //ESP8266
-		memmove(tmp_buffer + 1, tmp_buffer, strlen(tmp_buffer)+1); tmp_buffer[0] = '/';
+		memmove(tmp_buffer + 1, tmp_buffer, strlen(tmp_buffer) + 1); tmp_buffer[0] = '/';
 		if (!SPIFFS.exists(tmp_buffer)) {
 			DEBUG_PRINT("not found"); DEBUG_PRINTLN(tmp_buffer); continue;
 		}
 		File file = SPIFFS.open(tmp_buffer, "r");
 #endif
 #else // prepare to open log file for RPI/BBB
-        FILE *file;
-        file = fopen ( get_filename_fullpath ( tmp_buffer ), "rb" );
-        if ( !file ) continue;
+		FILE *file;
+		file = fopen(get_filename_fullpath(tmp_buffer), "rb");
+		if (!file) continue;
 #endif // prepare to open log file
 
-        int res;
-        while ( true )
-        {
+		int res;
+		while (true) {
 #if defined(ARDUINO)
 #if !defined(ESP8266) && !defined(ESP32)
-            res = file.fgets ( tmp_buffer, TMP_BUFFER_SIZE );
+			res = file.fgets(tmp_buffer, TMP_BUFFER_SIZE);
 #else
-			res = file.readBytesUntil('\n',tmp_buffer, TMP_BUFFER_SIZE);
-			tmp_buffer[res ] = 0;
+			res = file.readBytesUntil('\n', tmp_buffer, TMP_BUFFER_SIZE);
+			tmp_buffer[res] = 0;
 			DEBUG_PRINT("Log>"); DEBUG_PRINT(res); DEBUG_PRINT('=');  DEBUG_PRINTLN(tmp_buffer);
 #endif
-			if ( res <= 0 )
-            {
-                file.close();
-                break;
-            }
+			if (res <= 0) {
+				file.close();
+				break;
+			}
 #else
-            if ( fgets ( tmp_buffer, TMP_BUFFER_SIZE, file ) )
-            {
-                res = strlen ( tmp_buffer );
-            }
-            else
-            {
-                res = 0;
-            }
-            if ( res <= 0 )
-            {
-                fclose ( file );
-                break;
-            }
+			if (fgets(tmp_buffer, TMP_BUFFER_SIZE, file)) {
+				res = strlen(tmp_buffer);
+			} else {
+				res = 0;
+			}
+			if (res <= 0) {
+				fclose(file);
+				break;
+			}
 #endif
-            // check record type
-            // records are all in the form of [x,"xx",...]
-            // where x is program index (>0) if this is a station record
-            // and "xx" is the type name if this is a special record (e.g. wl, fl, rs)
-            // search string until we find the first comma
-            char *ptype = tmp_buffer;
-            tmp_buffer[TMP_BUFFER_SIZE-1]=0; // make sure the search will end
-            while ( *ptype && *ptype != ',' ) ptype++;
+			// check record type
+			// records are all in the form of [x,"xx",...]
+			// where x is program index (>0) if this is a station record
+			// and "xx" is the type name if this is a special record (e.g. wl, fl, rs)
+			// search string until we find the first comma
+			char *ptype = tmp_buffer;
+			tmp_buffer[TMP_BUFFER_SIZE - 1] = 0; // make sure the search will end
+			while (*ptype && *ptype != ',') ptype++;
 			//DEBUG_PRINTLN(type_specified);
-            if ( *ptype != ',' ) continue; // didn't find comma, move on
-            ptype++;  // move past comma
+			if (*ptype != ',') continue; // didn't find comma, move on
+			ptype++;  // move past comma
 			//DEBUG_PRINTLN(type);
-            if ( type_specified && strncmp ( type, ptype+1, 2 ) )
-                continue;
-            // if type is not specified, output everything except "wl" and "fl" records
-            if ( !type_specified && ( !strncmp ( "wl", ptype+1, 2 ) || !strncmp ( "fl", ptype+1, 2 ) ) )
-                continue;
+			if (type_specified && strncmp(type, ptype + 1, 2))
+				continue;
+			// if type is not specified, output everything except "wl" and "fl" records
+			if (!type_specified && (!strncmp("wl", ptype + 1, 2) || !strncmp("fl", ptype + 1, 2)))
+				continue;
 			DEBUG_PRINT("OK");
-            // if this is the first record, do not print comma
-            if ( comma )  bfill.emit_p ( PSTR ( "," ) );
-            else
-            {
-                comma=1;
-            }
-            bfill.emit_p ( PSTR ( "$S" ), tmp_buffer );
-		     DEBUG_PRINTLN(tmp_buffer);
-            // if the available ether buffer size is getting small
-            // push out a packet
-            if ( available_ether_buffer() < 80 )
-            {
-                send_packet();
-            }
-        }
-    }
+			// if this is the first record, do not print comma
+			if (comma)  bfill.emit_p(PSTR(","));
+			else {
+				comma = 1;
+			}
+			bfill.emit_p(PSTR("$S"), tmp_buffer);
+			DEBUG_PRINTLN(tmp_buffer);
+			// if the available ether buffer size is getting small
+			// push out a packet
+			if (available_ether_buffer() < 80) {
+				send_packet();
+			}
+		}
+	}
 
-    bfill.emit_p ( /*PSTR*/ ( "]" ) );
-    delay ( 1 );
-    return HTML_OK;
+	bfill.emit_p( /*PSTR*/ ("]"));
+	delay(1);
+	return HTML_OK;
 }
 /**
  * Delete log
@@ -1692,26 +1655,25 @@ byte server_delete_log ( char *p )
 }
 
 /** Output all JSON data, including jc, jp, jo, js, jn */
-byte server_json_all ( char *p )
-{
-    print_json_header();
-    bfill.emit_p ( PSTR ( "\"settings\":{" ) );
-    server_json_controller_main();
-    send_packet();
-    bfill.emit_p ( PSTR ( ",\"programs\":{" ) );
-    server_json_programs_main();
-    send_packet();
-    bfill.emit_p ( PSTR ( ",\"options\":{" ) );
-    server_json_options_main();
-    send_packet();
-    bfill.emit_p ( PSTR ( ",\"status\":{" ) );
-    server_json_status_main();
-    send_packet();
-    bfill.emit_p ( PSTR ( ",\"stations\":{" ) );
-    server_json_stations_main();
-    bfill.emit_p ( PSTR ( "}" ) );
-    delay ( 1 );
-    return HTML_OK;
+byte server_json_all(char *p) {
+	print_json_header();
+	bfill.emit_p(PSTR("\"settings\":{"));
+	server_json_controller_main();
+	send_packet();
+	bfill.emit_p(PSTR(",\"programs\":{"));
+	server_json_programs_main();
+	send_packet();
+	bfill.emit_p(PSTR(",\"options\":{"));
+	server_json_options_main();
+	send_packet();
+	bfill.emit_p(PSTR(",\"status\":{"));
+	server_json_status_main();
+	send_packet();
+	bfill.emit_p(PSTR(",\"stations\":{"));
+	server_json_stations_main();
+	bfill.emit_p(PSTR("}"));
+	delay(1);
+	return HTML_OK;
 }
 
 typedef byte ( *URLHandler ) ( char* );
@@ -1781,96 +1743,79 @@ URLHandler urls[] =
 };
 
 // handle Ethernet request
-void handle_web_request ( char *p )
-{
+void handle_web_request(char *p) {
 #if defined(ARDUINO)
-    ether.httpServerReplyAck();
+	ether.httpServerReplyAck();
 #endif
-    rewind_ether_buffer();
-	
-    // assume this is a GET request
-    // GET /xx?xxxx
-    char *com = p+5;
-    char *dat = com+3;
+	rewind_ether_buffer();
+
+	// assume this is a GET request
+	// GET /xx?xxxx
+	char *com = p + 5;
+	char *dat = com + 3;
 	DEBUG_PRINT("web req "); DEBUG_PRINT(com[0]); DEBUG_PRINTLN(com[1]);
-    if ( com[0]==' '||com[0]==0 )
-    {   
+	if (com[0] == ' ' || com[0] == 0) {
 		DEBUG_PRINTLN("home page");
-        server_home();  // home page handler
-        send_packet ( true );
-		
-    }
-    else
-    {
-        // server funtion handlers
-        byte i;
-        for ( i=0; i<sizeof ( urls ) /sizeof ( URLHandler ); i++ )
-        {
-            if ( pgm_read_byte ( _url_keys+2*i ) ==com[0]
-                    &&pgm_read_byte ( _url_keys+2*i+1 ) ==com[1] )
-            {
+		server_home();  // home page handler
+		send_packet(true);
 
-                // check password
-                byte ret = HTML_UNAUTHORIZED;
+	} else {
+		// server funtion handlers
+		byte i;
+		for (i = 0; i < sizeof(urls) / sizeof(URLHandler); i++) {
+			if (pgm_read_byte(_url_keys + 2 * i) == com[0]
+				&& pgm_read_byte(_url_keys + 2 * i + 1) == com[1]) {
 
-                if ( com[0]=='s' && com[1]=='u' ) // for /su do not require password
-                {
-                    ret = ( urls[i] ) ( dat );
-                }
-                else if ( ( com[0]=='j' && com[1]=='o' ) ||
-                          ( com[0]=='j' && com[1]=='a' ) ) // for /jo and /ja we output fwv if password fails
-                {
-                    if ( check_password ( dat ) ==false )
-                    {
-                        print_json_header();
-                        bfill.emit_p ( PSTR ( "\"$F\":$D}" ),
-                                       op_json_names+0, os.options[0] );
-                        ret = HTML_OK;
-                    }
-                    else
-                    {
-                        ret = ( urls[i] ) ( dat );
-                    }
-                }
-                else
-                {
-                    // first check password
-                    if ( check_password ( dat ) ==false )
-                    {
-                        ret = HTML_UNAUTHORIZED;
-                    }
-                    else
-                    {
-                        ret = ( urls[i] ) ( dat );
-                    }
-                }
+				// check password
+				byte ret = HTML_UNAUTHORIZED;
+
+				if (com[0] == 's' && com[1] == 'u') // for /su do not require password
+				{
+					ret = (urls[i]) (dat);
+				} else if ((com[0] == 'j' && com[1] == 'o') ||
+					(com[0] == 'j' && com[1] == 'a')) // for /jo and /ja we output fwv if password fails
+				{
+					if (check_password(dat) == false) {
+						print_json_header();
+						bfill.emit_p(PSTR("\"$F\":$D}"),
+							op_json_names + 0, os.options[0]);
+						ret = HTML_OK;
+					} else {
+						ret = (urls[i]) (dat);
+					}
+				} else {
+					// first check password
+					if (check_password(dat) == false) {
+						ret = HTML_UNAUTHORIZED;
+					} else {
+						ret = (urls[i]) (dat);
+					}
+				}
 				DEBUG_PRINT("ret="); DEBUG_PRINT(ret);
-                switch ( ret )
-                {
-                case HTML_OK:
-                    break;
-                case HTML_REDIRECT_HOME:
-                    print_html_standard_header();
-                    bfill.emit_p ( PSTR ( "$F" ), htmlReturnHome );
-                    break;
-                default:
-                    print_json_header();
-                    bfill.emit_p ( PSTR ( "\"result\":$D}" ), ret );
-                }
-                break;
-            }
-        }
+				switch (ret) {
+				case HTML_OK:
+					break;
+				case HTML_REDIRECT_HOME:
+					print_html_standard_header();
+					bfill.emit_p(PSTR("$F"), htmlReturnHome);
+					break;
+				default:
+					print_json_header();
+					bfill.emit_p(PSTR("\"result\":$D}"), ret);
+				}
+				break;
+			}
+		}
 
-        if ( i==sizeof ( urls ) /sizeof ( URLHandler ) )
-        {
+		if (i == sizeof(urls) / sizeof(URLHandler)) {
 			DEBUG_PRINTLN("no server function");
-            // no server funtion found
-            print_json_header();
-            bfill.emit_p ( PSTR ( "\"result\":$D}" ), HTML_PAGE_NOT_FOUND );
-        }
-        send_packet ( true );
-    }
-    //delay(50); // add a bit of delay here
+			// no server funtion found
+			print_json_header();
+			bfill.emit_p(PSTR("\"result\":$D}"), HTML_PAGE_NOT_FOUND);
+		}
+		send_packet(true);
+	}
+	//delay(50); // add a bit of delay here
 }
 
 /*--------NEW NTP code ----------*/
@@ -1898,14 +1843,21 @@ WiFiUDP Udp;
 	Udp.write(packetBuffer, NTP_PACKET_SIZE);
 	Udp.endPacket();
 }
-time_t getNtpTime()
-{
-	byte itry = 0;
-	while (itry++<20){
-		
+	time_t getNtpTime() {
+		Udp.begin(8888); DEBUG_PRINTLN(WiFi.dnsIP());
+		byte itry = 0;
+		while (itry++ < 20) {
+
 			IPAddress timeServer;
 			WiFi.hostByName("time.nist.gov", timeServer);
 			Serial.println(timeServer);
+			//		if (!ether.HOSTname(timeServer, "time.nist.gov")) {
+			//			timeServer = IPAddress(os.options[OPTION_NTP_IP1],
+			//									os.options[OPTION_NTP_IP2],
+			//									os.options[OPTION_NTP_IP3],
+			//									os.options[OPTION_NTP_IP4]);
+			//		}
+			//		Serial.println(timeServer);
 			Serial.println("waiting for sync");
 			while (Udp.parsePacket() > 0); // discard any previously received packets
 			Serial.println("Transmit NTP Request");
@@ -1926,9 +1878,9 @@ time_t getNtpTime()
 				}
 			}
 		}
-	Serial.println("No NTP Response :-(");
-	return 0; // return 0 if unable to get the time
-}
+		Serial.println("No NTP Response :-(");
+		return 0; // return 0 if unable to get the time
+	}
 
 
 

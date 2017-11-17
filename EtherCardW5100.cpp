@@ -625,7 +625,7 @@ bool EtherCardW5100::WiFiconnect( const uint8_t* my_ip, const uint8_t* gw_ip, co
 		WiFi.begin(SSID, PASSWORD);// , my_ip, dns_ip, gw_ip);
 		byte netmask[4] = { 255,255,255,0 };
 
-		 WiFi.config(my_ip, gw_ip, netmask);
+		 WiFi.config(my_ip, gw_ip, netmask,dns_ip);
 		DEBUG_PRINT("\nConnecting to "); DEBUG_PRINTLN(SSID);
 		uint8_t i = 0;
 		while (WiFi.status() != WL_CONNECTED && i++ <=201) { yield(); delay(400); DEBUG_PRINT('.'); }
@@ -760,11 +760,10 @@ bool	result = WiFiconnect();
 		// start listening for clients
     incoming_server.begin();
  //   udp_client.begin ( NTP_CLIENT_PORT );
-
     // save the values
     IP2Byte ( ETHERNE.localIP(), myip );
     IP2Byte (ETHERNE.gatewayIP(), gwip );
-    IP2Byte (ETHERNE.gatewayIP(), dnsip );
+    IP2Byte (ETHERNE.dnsIP(), dnsip );
     IP2Byte (ETHERNE.subnetMask(), netmask );
 
     // print debug values
@@ -826,7 +825,13 @@ void EtherCardW5100::printIPConfig()
     printIp ( F ( "Local IP:   " ), myip );
     printIp ( F ( "Gateway IP: " ), gwip );
     printIp ( F ( "DNS IP:     " ), dnsip );
+
     printIp ( F ( "Netmask:    " ), netmask );
+	IPAddress timeServer;
+	Serial.println(WiFi.dnsIP());
+	WiFi.hostByName("time.nist.gov", timeServer);
+	Serial.println(timeServer);
+
 #endif
 }
 

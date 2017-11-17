@@ -63,7 +63,7 @@ PCF8574 PCF[10];//_38(0x3F);  // add switches to lines  (used as input)
 #define digitalRead(x)   (x<MAX_MCU_PINS)? digitalRead(x): PCF[(x-MAX_MCU_PINS)/16].read((x-MAX_MCU_PINS)%16)
 #else
 #define pinMode(x, y)  pinMode(x, y)          //verify pin on Ic??
-#define digitalWrite(x,y)  digitalWrite(x,y)
+#define digitalWrite(x,y)  {digitalWrite(x,y);if(nDB>300 ) if(x==(nDB-300)){ if(y>0){Serial.print("-");}else {Serial.print("_");}}}
 #define digitalRead(x)   digitalRead(x)
 #endif
 #ifndef ESP32 ////--
@@ -434,13 +434,13 @@ char op_max[] =
     255,
     1,
     MAX_NUM_STATIONS,
-    60,
-    120,
+  255,
+  255,
     0,
     255,
     255,
     1,
-#ifdef OS21
+#ifdef OS217
 	255,
 	255,
 	255,
@@ -2223,10 +2223,11 @@ void OpenSprinkler::switch_gpiostation(GPIOStationData *data, bool turnon) {
 	byte activeState = data->active - '0';
 
 	pinMode(gpio, OUTPUT);
-	if (turnon)
-		digitalWrite(gpio, activeState);
-	else
+	if (turnon) {
+		digitalWrite(gpio, activeState);}
+	else {
 		digitalWrite(gpio, 1 - activeState);
+	}
 }
 
 /** Callback function for browseUrl calls */
