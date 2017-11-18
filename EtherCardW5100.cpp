@@ -1423,8 +1423,7 @@ void EtherCardW5100::browseUrl ( const char *urlbuf, const char *urlbuf_varpart,
     // check cb pointer is 'real' (non zero)
     if ( !client_browser_cb )
         return;
-	DEBUG_PRINT("hoststring=");
-	for (int i = 0; i < strlen(hoststr); i++)DEBUG_PRINT(hoststr[i]);
+	
 
     // fill the buffer  host_name_should be loaded here
     uint16_t len = ( *www_client_internal_datafill_cb ) ( www_fd );
@@ -1444,13 +1443,22 @@ void EtherCardW5100::browseUrl ( const char *urlbuf, const char *urlbuf_varpart,
             DEBUG_PRINT ( ( char ) buffer[c] );
         }
     }
-    DEBUG_PRINTLN ( F ( "" ) );
-
     // close any connection before send a new request, to free the socket
     outgoing_client.stop();
+	bool connected = false;
 	delay(1000);
+	DEBUG_PRINT("hoststring=");
+#if defined  (ESP32)||defined(ESP8266)
+	if (hoststr == "*") {
+		DEBUG_PRINTLN(IPAddress(hisip[0], hisip[1], hisip[2], hisip[3]));
+		connected = outgoing_client.connect(IPAddress(hisip[0], hisip[1], hisip[2], hisip[3]), hisport);
+	}
+	else
+#endif
+		connected=outgoing_client.connect(hoststr, hisport);
+	 for (int i = 0; i < strlen(hoststr); i++)DEBUG_PRINT(hoststr[i]);
     // send the request
-    if ( outgoing_client.connect (hoststr, hisport ) )
+    if (connected )
 		//-------------modified *hoststr now=weather.opensprinkler.com was "*"
     {
         // send the HTTP GET request:
