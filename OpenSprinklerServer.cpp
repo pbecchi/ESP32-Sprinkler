@@ -846,8 +846,12 @@ byte server_change_program ( char *p )
     for ( i=0; i<os.nstations; i++ )
     {
         uint16_t pre = parse_listdata ( &pv );
+#ifdef OS217
+    prog.durations[i] = pre;
+#else
         prog.durations[i] = water_time_encode ( pre );
-    }
+#endif
+	}
     pv++; // this should be a ']'
     pv++; // this should be a ']'
     // parse program name
@@ -958,12 +962,17 @@ void server_json_programs_main()
         }
         bfill.emit_p ( PSTR ( "$D],[" ), prog.starttimes[i] ); // this is the last element
         // station water time
-        for ( i=0; i<os.nstations-1; i++ )
-        {
-            bfill.emit_p ( PSTR ( "$L," ), ( unsigned long ) water_time_decode ( prog.durations[i] ) );
+        for ( i=0; i<os.nstations-1; i++ ) {
+#ifdef OS217
+       bfill.emit_p(PSTR("$L,"),(unsigned long)prog.durations[i]);
         }
+       bfill.emit_p(PSTR("$L],\""),(unsigned long)prog.durations[i]); // this is the last element
+#else
+			bfill.emit_p(PSTR("$L,"), (unsigned long)water_time_decode(prog.durations[i]));
+	     }
         bfill.emit_p ( PSTR ( "$L],\"" ), ( unsigned long ) water_time_decode ( prog.durations[i] ) ); // this is the last element
-        // program name
+#endif
+																								   // program name
         strncpy ( tmp_buffer, prog.name, PROGRAM_NAME_SIZE );
         tmp_buffer[PROGRAM_NAME_SIZE] = 0;  // make sure the string ends
         bfill.emit_p ( PSTR ( "$S" ), tmp_buffer );

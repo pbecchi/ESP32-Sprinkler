@@ -762,8 +762,12 @@ void do_loop()
                         // if station has non-zero water time and the station is not disabled
             if (prog.durations[sid] && !(os.station_attrib_bits_read(ADDR_NVM_STNDISABLE+bid)&(1<<s))) {
                             // water time is scaled by watering percentage
+#ifdef OS217
+                           ulong water_time = water_time_resolve(prog.durations[sid]);
+#else
                             ulong water_time = water_time_resolve ( water_time_decode ( prog.durations[sid] ) );
-                            // if the program is set to use weather scaling
+#endif 
+							// if the program is set to use weather scaling
               if (prog.use_weather) {
                                 byte wl = os.options[OPTION_WATER_PERCENTAGE];
                                 water_time = water_time * wl / 100;
@@ -953,9 +957,14 @@ void do_loop()
         }
         // handle master2
         if ( os.status.mas2>0 ) {
+#ifdef OS217
+      int16_t mas_on_adj_2 = water_time_decode_signed(os.options[OPTION_MASTER_ON_ADJ_2]);
+      int16_t mas_off_adj_2= water_time_decode_signed(os.options[OPTION_MASTER_OFF_ADJ_2]);
+#else
             byte mas_on_adj_2 = os.options[OPTION_MASTER_ON_ADJ_2];
             byte mas_off_adj_2= os.options[OPTION_MASTER_OFF_ADJ_2];
-            byte masbit2 = 0;
+#endif
+			byte masbit2 = 0;
             os.station_attrib_bits_load ( ADDR_NVM_MAS_OP_2, ( byte* ) tmp_buffer ); // tmp_buffer now stores masop2_bits
       for(sid=0;sid<os.nstations;sid++) {
                 // skip if this is the master station
@@ -967,7 +976,11 @@ void do_loop()
                     q=pd.queue+pd.station_qid[sid];
                     // check if timing is within the acceptable range
                     if ( curr_time >= q->st + mas_on_adj_2 &&
-                            curr_time <= q->st + q->dur + mas_off_adj_2 - 60 )
+                            curr_time <= q->st + q->dur + mas_off_adj_2 
+#ifndef OS217
+     						- 60
+#endif
+						)
                     {
                         masbit2 = 1;
                         break;
@@ -1330,7 +1343,7 @@ void manual_start_program(byte pid) {
     if(dur>0 && !(os.station_attrib_bits_read(ADDR_NVM_STNDISABLE+bid)&(1<<s))) {
 #endif
             dur = water_time_resolve ( water_time_decode ( prog.durations[sid] ) );
-        RuntimeQueueStruct *q = pd.enqueue();
+		RuntimeQueueStruct *q = pd.enqueue();
         if ( q && dur>0 && ! ( os.station_attrib_bits_read ( ADDR_NVM_STNDISABLE+bid ) & ( 1<<s ) ) )
         {
             q->st = 0;

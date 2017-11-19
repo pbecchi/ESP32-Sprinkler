@@ -143,6 +143,16 @@
 	  * 0       2438  2450   2486  2534  2582   2630   2654        3998  4005  4012   4019  4026  4033  4040      4096
 	  */
 
+	  /** 4KB NVM (OS217) data structure:
+	  *******
+	  ********** in SGxx the CHANGED NVM structure see Tables_SG_20_vxx.xls file
+	  ******
+	  * |         |     |  ---STRING PARAMETERS---      |           |   ----STATION ATTRIBUTES-----      |          |
+	  * | PROGRAM | CON | PWD | LOC | JURL | WURL | KEY | STN_NAMES | MAS | IGR | MAS2 | DIS | SEQ | SPE | OPTIONS  |
+	  * |  (2433) |(12) |(36) |(48) | (48) | (48) |(24) |   (1344)  | (7) | (7) |  (7) | (7) | (7) | (7) |   (61)   |
+	  * |         |     |     |     |      |      |     |           |     |     |      |     |     |     |          |
+	  * 0       2433  2445   2481  2529  2577   2625   2649        3993  4000  4007   4014  4021  4028  4035      4096
+	  */
 	#if defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__)//|| defined(BATTERY) // for 4KB NVM
 
 #ifdef SG21
@@ -155,7 +165,7 @@
 #define MAX_CLOUDURL        48    // Cloud Server url
 #else
 		#define MAX_EXT_BOARDS    6  // maximum number of exp. boards (each expands 8 stations)
-#define MAX_PROGRAMDATA     2438  // program data
+#define MAX_PROGRAMDATA     2433  // program data
 #endif
 		#define MAX_NUM_STATIONS  ((1+MAX_EXT_BOARDS)*8)  // maximum number of stations
 

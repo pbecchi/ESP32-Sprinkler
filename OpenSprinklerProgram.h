@@ -31,7 +31,11 @@
     #define PROGRAM_NAME_SIZE   20
     #define RUNTIME_QUEUE_SIZE  MAX_NUM_STATIONS
   #else
-    #define PROGRAM_NAME_SIZE   12
+#ifdef OS217
+    #define PROGRAM_NAME_SIZE   16
+#else
+	#define PROGRAM_NAME_SIZE   12
+#endif
     #define RUNTIME_QUEUE_SIZE  MAX_NUM_STATIONS
   #endif
 #else
@@ -110,9 +114,12 @@ public:
   //      bit 11      : not used, reserved
   //   else: standard start time (value between 0 to 1440, by bits 0 to 10)
   int16_t starttimes[MAX_NUM_STARTTIMES];
+#ifdef OS217
+      uint16_t durations[MAX_NUM_STATIONS];  // duration / water time of each station
 
-  byte durations[MAX_NUM_STATIONS];  // duration / water time of each station
-  
+#else
+      byte durations[MAX_NUM_STATIONS];  // duration / water time of each station
+#endif
   char name[PROGRAM_NAME_SIZE];
 
   byte check_match(time_t t);

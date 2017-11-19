@@ -528,16 +528,27 @@ ulong water_time_resolve(uint16_t v) {
 
 // encode a 16-bit signed water time to 8-bit unsigned byte (leading bit is the sign)
 byte water_time_encode_signed(int16_t i) {
+#ifdef OS217
+  i=(i>600)?600:i;
+  i=(i<-600)?-600:i;
+  return (i+600)/5;
+#else
   byte ret = water_time_encode(i>=0?i : -i);
   return ((i>=0) ? (128+ret) : (128-ret));
+#endif
 }
 
 // decode a 8-bit unsigned byte (leading bit is the sign) into a 16-bit signed water time
 int16_t water_time_decode_signed(byte i) {
+#ifdef OS217
+  i=(i>240)?240:i;
+  return ((int16_t)i-120)*5;
+#else
   int16_t ret = i;
   ret -= 128;
   ret = water_time_decode(ret>=0?ret:-ret);
   return (i>=128 ? ret : -ret);
+#endif
 }
 
 
