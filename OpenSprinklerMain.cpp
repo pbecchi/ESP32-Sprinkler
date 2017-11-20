@@ -1332,21 +1332,28 @@ void manual_start_program(byte pid) {
   for(sid=0;sid<os.nstations;sid++) {
         bid=sid>>3;
         s=sid&0x07;
+#ifdef OS217
+    if ((os.status.mas==sid+1) || (os.status.mas2==sid+1))
+      continue;    
+#endif
         dur = 60;
         if ( pid==255 )  dur=2;
         else if ( pid>0 )
-#ifdef SG21
+#ifdef OS217
       dur = water_time_resolve(prog.durations[sid]);
     if(uwt) {
       dur = dur * os.options[OPTION_WATER_PERCENTAGE] / 100;
     }
     if(dur>0 && !(os.station_attrib_bits_read(ADDR_NVM_STNDISABLE+bid)&(1<<s))) {
-#endif
-            dur = water_time_resolve ( water_time_decode ( prog.durations[sid] ) );
+		RuntimeQueueStruct *q = pd.enqueue();
+		if(q){
+#else
+        dur = water_time_resolve ( water_time_decode ( prog.durations[sid] ) );
 		RuntimeQueueStruct *q = pd.enqueue();
         if ( q && dur>0 && ! ( os.station_attrib_bits_read ( ADDR_NVM_STNDISABLE+bid ) & ( 1<<s ) ) )
         {
-            q->st = 0;
+#endif
+			q->st = 0;
             q->dur = dur;
             q->sid = sid;
             q->pid = 254;
