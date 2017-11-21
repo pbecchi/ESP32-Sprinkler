@@ -1037,7 +1037,7 @@ void OpenSprinkler::begin()
 #endif
 #else
     // shift register setup
-#ifdef PIN_SSR_OE
+#ifdef PIN_SR_OE
     PINMODE ( PIN_SR_OE, OUTPUT );
 
     // pull shift register OE high to disable output
@@ -1555,7 +1555,6 @@ void OpenSprinkler::apply_all_station_bits()
 #else //ARDUINO DISCRETE
     digitalWrite ( PIN_SR_LATCH, LOW );
     byte bid, s, sbits;
-
     // Shift out all station bit values
     // from the highest bit to the lowest
     for ( bid=0; bid<=MAX_EXT_BOARDS; bid++ )
@@ -1573,7 +1572,6 @@ void OpenSprinkler::apply_all_station_bits()
 #endif
 #ifndef OSPI
 			byte y = (sbits & ((byte)1 << (MS7))) ? HIGH : LOW;
-			
 			digitalWrite ( PIN_SR_DATA, (sbits & ((byte)1 << (MS7))) ? HIGH : LOW);
 #endif
             digitalWrite ( PIN_SR_CLOCK, HIGH );
