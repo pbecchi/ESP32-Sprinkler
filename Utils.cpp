@@ -47,6 +47,8 @@ extern OpenSprinkler os;
 extern SdFat sd;
 #endif
 #endif
+#undef DB_MASK
+#define DB_MASK 8
 void write_message(const char * message) {
 	//ether.message(message);
 	File file;char * fn  = "/message.txt";

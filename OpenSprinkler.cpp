@@ -2638,7 +2638,7 @@ void OpenSprinkler::options_setup(){
 #ifdef LCD_SSD1306
 		lcd.display();
 #endif
-        delay ( 1000 );
+        //delay ( 1000 );
     }
 #endif
 }
@@ -3205,74 +3205,96 @@ byte OpenSprinkler::button_read ( byte waitmode )
 #endif //BUTTON_ADC_PIN .... OPENSPRINKLER_ARDUINO_FREETRONICS_LCD
 
 /** user interface for setting options during startup */
-void OpenSprinkler::ui_set_options ( int oid )
-{
-    boolean finished = false;
-    byte button;
-    int i=oid;
+void OpenSprinkler::ui_set_options(int oid) {
+	boolean finished = false;
+	byte button;
+	int i = oid;
 
-    while ( !finished )
-    {
-        button = button_read ( BUTTON_WAIT_HOLD );
+	while (!finished) {
+		button = button_read(BUTTON_WAIT_HOLD);
 
-        switch ( button & BUTTON_MASK )
-        {
-        case BUTTON_1:
-            if ( i==OPTION_FW_VERSION || i==OPTION_HW_VERSION || i==OPTION_FW_MINOR ||
-                    i==OPTION_HTTPPORT_0 || i==OPTION_HTTPPORT_1 ||
-                    i==OPTION_PULSE_RATE_0 || i==OPTION_PULSE_RATE_1 ) break; // ignore non-editable options
-            if ( pgm_read_byte ( op_max+i ) != options[i] ) options[i] ++;
-            break;
+		switch (button & BUTTON_MASK) {
+		case BUTTON_1:
+			if (i == OPTION_FW_VERSION || i == OPTION_HW_VERSION || i == OPTION_FW_MINOR ||
+				i == OPTION_HTTPPORT_0 || i == OPTION_HTTPPORT_1 ||
+				i == OPTION_PULSE_RATE_0 || i == OPTION_PULSE_RATE_1
+#ifdef OS217
+			   ||	i == OPTION_SGHW_VERSION || i == OPTION_SGFW_VERSION || i == OPTION_SEND_LOGFILES
+#endif				
+				) break; // ignore non-editable options
+			if (pgm_read_byte(op_max + i) != options[i]) options[i] ++;
+			break;
 
-        case BUTTON_2:
-            if ( i==OPTION_FW_VERSION || i==OPTION_HW_VERSION || i==OPTION_FW_MINOR ||
-                    i==OPTION_HTTPPORT_0 || i==OPTION_HTTPPORT_1 ||
-                    i==OPTION_PULSE_RATE_0 || i==OPTION_PULSE_RATE_1 ) break; // ignore non-editable options
-            if ( options[i] != 0 ) options[i] --;
-            break;
+		case BUTTON_2:
+			if (i == OPTION_FW_VERSION || i == OPTION_HW_VERSION || i == OPTION_FW_MINOR ||
+				i == OPTION_HTTPPORT_0 || i == OPTION_HTTPPORT_1 ||
+				i == OPTION_PULSE_RATE_0 || i == OPTION_PULSE_RATE_1
+#ifdef OS217
+				|| i == OPTION_SGHW_VERSION || i == OPTION_SGFW_VERSION
+#endif
+				) break; // ignore non-editable options
+			if (options[i] != 0) options[i] --;
+			break;
 
-        case BUTTON_3:
-            if ( ! ( button & BUTTON_FLAG_DOWN ) ) break;
-            if ( button & BUTTON_FLAG_HOLD )
-            {
-                // if OPTION_RESET is set to nonzero, change it to reset condition value
-                if ( options[OPTION_RESET] )
-                {
-                    options[OPTION_RESET] = 0xAA;
-                }
-                // long press, save options
-                options_save();
-                finished = true;
-            }
-            else
-            {
-                // click, move to the next option
-                if ( i==OPTION_USE_DHCP && options[i] ) i += 9; // if use DHCP, skip static ip set
-                else if ( i==OPTION_HTTPPORT_0 ) i+=2; // skip OPTION_HTTPPORT_1
-                else if ( i==OPTION_PULSE_RATE_0 ) i+=2; // skip OPTION_PULSE_RATE_1
-                else if ( i==OPTION_SENSOR_TYPE && options[i]!=SENSOR_TYPE_RAIN ) i+=2; // if not using rain sensor, skip rain sensor type
-                else if ( i==OPTION_MASTER_STATION && options[i]==0 ) i+=3; // if not using master station, skip master on/off adjust
-                else if ( i==OPTION_MASTER_STATION_2&& options[i]==0 ) i+=3; // if not using master2, skip master2 on/off adjust
-                else
-                {
-                    i = ( i+1 ) % NUM_OPTIONS;
-                }
-                if ( i==OPTION_SEQUENTIAL_RETIRED ) i++;
-            }
-            break;
-        }
+		case BUTTON_3:
+			if (!(button & BUTTON_FLAG_DOWN)) break;
+			if (button & BUTTON_FLAG_HOLD) {
+				// if OPTION_RESET is set to nonzero, change it to reset condition value
+				if (options[OPTION_RESET]) {
+					options[OPTION_RESET] = 0xAA;
+				}
+				// long press, save options
+				options_save();
+				finished = true;
+			} else {
+				// click, move to the next option
+				if (i == OPTION_USE_DHCP && options[i]) i += 9; // if use DHCP, skip static ip set
+				else if (i == OPTION_HTTPPORT_0) i += 2; // skip OPTION_HTTPPORT_1
+#ifdef OS217
+				else if (i == OPTION_FW_MINOR) i += 3; // skip PULSE option
+				else if (i == OPTION_FSENSOR_TYPE && options[i] == SENSOR_TYPE_FLOW) i = OPTION_PULSE_RATE_0; // if no soil sensor, skip soil sensor options
+				else if (i == OPTION_PULSE_RATE_0) i = OPTION_FLOWUNIT_GAL;		// skip after OPTION_PULSE_RATE setting
+				else if (i == OPTION_FW_VERSION) i = OPTION_CAL_REQUEST;		// skip Skip from FWversion to CalRequest
+				else if (i == OPTION_SGFW_VERSION) i = OPTION_TIMEZONE;		// after compl CalRq to SGFW, skip back and continue at OPTION_TIMEZONE
+				else if (i == OPTION_CURR_RANGE) i = OPTION_CLIENT_MODE;		// after compl CalRq to SGFW, skip back and continue at OPTION_TIMEZONE
+				else if (i == OPTION_RSENSOR_TYPE && options[i] != SENSOR_TYPE_RAIN) i += 2; // if not using rain sensor, skip rain sensor type
+				else if (i == OPTION_SSENSOR_1 && options[i] == SENSOR_TYPE_NONE) i += 2; // if no soil sensor1, skip soil sensor options
+				else if (i == OPTION_SSENSOR_2 && options[i] == SENSOR_TYPE_NONE) i += 2; // if no soil sensor2, skip soil sensor options
+				else if (i == OPTION_CLIENT_MODE && options[i] == 0) i += 4; // if not ClientMode, skip Client parameters
+#else
+				else if (i == OPTION_PULSE_RATE_0) i += 2; // skip OPTION_PULSE_RATE_1
+				else if (i == OPTION_SENSOR_TYPE && options[i] != SENSOR_TYPE_RAIN) i += 2; // if not using rain sensor, skip rain sensor type
+#endif
+				else if (i == OPTION_MASTER_STATION && options[i] == 0) i += 3; // if not using master station, skip master on/off adjust
+				else if (i == OPTION_MASTER_STATION_2&& options[i] == 0) i += 3; // if not using master2, skip master2 on/off adjust
+				else {
+					i = (i + 1) % NUM_OPTIONS;
+				}
+#ifdef OS217
+				if (i == OPTION_SEQUENTIAL_RETIRED || i == OPTION_LCD_SIZE || i == OPTION_LANGUAGE_LCD) i++;
+#if defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__)
+				else if (hw_type == HW_TYPE_AC && i == OPTION_BOOST_TIME) i++;  // skip boost time for non-DC controller
+#ifdef LCD_I2C
+				else if (lcd.type() == LCD_I2C && i == OPTION_LCD_CONTRAST) i += 2;
+#endif  
+#endif
+#else
+				if (i == OPTION_SEQUENTIAL_RETIRED) i++;
+#endif
+			}
+			break;
+		}
 
-        if ( button != BUTTON_NONE )
-        {
-            lcd_print_option ( i );
-        }
-    }
+		if (button != BUTTON_NONE) {
+			lcd_print_option(i);
+		}
+	}
 #ifndef LCD_SSD1306
 	lcd.noBlink();
 #else
 
 #endif
-    
+
 }
 
 /** Set LCD contrast (using PWM) */
