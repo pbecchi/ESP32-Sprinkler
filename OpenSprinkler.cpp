@@ -93,6 +93,8 @@ ulong OpenSprinkler::sensor_lasttime;
 ulong OpenSprinkler::s1sensor_lasttime;
 ulong OpenSprinkler::s2sensor_lasttime;
 uint16_t OpenSprinkler::current_offset;
+#include "SensorGroup.h"
+extern SensorGroup sensors;	//SensorGroup object
 #else
 ulong OpenSprinkler::flowcount_log_start;
 ulong OpenSprinkler::flowcount_rt;
@@ -1835,19 +1837,19 @@ bool OpenSprinkler::programswitch_status(ulong curr_time) {
 #if defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__)
 uint16_t OpenSprinkler::read_current()
 {
+	uint16_t v = analogRead(PIN_CURR_SENSE);
     if ( status.has_curr_sense )
     {
         if ( hw_type == HW_TYPE_DC )
         {
-            return ( uint16_t ) ( analogRead ( PIN_CURR_SENSE ) * 16.11 );
+            return (uint16_t) ( v * 16.11) ; //not transcoded to ESP32
         }
         else
         {
 #ifdef SG21
-				uint16_t v = analogRead(PIN_CURR_SENSE);
 			if (current_offset >= v) v = 0;
-			else v = current_offset;
-			return (uint16_t)(v * 1.42); //11.39
+			else v -= current_offset;
+			return (uint16_t)(v / 6.15); //11.39
 #else
             return ( uint16_t ) ( analogRead ( PIN_CURR_SENSE ) * 11.39 );
 #endif
@@ -2747,6 +2749,32 @@ void OpenSprinkler::lcd_print_line_clear_pgm ( PGM_P /*PROGMEM*/ str, byte line 
 	lcd.display();
 #endif
 }
+//  Csaba print Sensor      print Sensor on SD1306 graphic 128 64 display
+#if defined(SG21) && defined(LCD_SSD1306)
+void OpenSprinkler::lcd_print_sensors () {
+
+	lcd.setTextSize(1);
+	uint16_t v=read_current();
+	lcd.setCursor(0,54);
+	lcd.print("So1:"); lcd.print(status.dry_soil_1 ? "ir " : "No ");
+	lcd.print("So2:"); lcd.println(status.dry_soil_2 ? "ir " : "No ");
+	lcd.setCursor(0,27);
+	lcd.print("RaSw:"); lcd.print(status.rain_sensed ? "Y " : "N ");
+	lcd.print("RaDe:"); lcd.println(status.rain_delayed ? "Y " : "N ");
+	lcd.setCursor(0,36);
+	lcd.print("Curr(mA):"); 
+	if(v < 10) {lcd.print("  "); lcd.println(v);}
+	else if(v<100){lcd.print(" "); lcd.println(v);}
+		else lcd.println(v);
+	lcd.setCursor(0,45);
+	lcd.print("Flow:          ");
+	lcd.setCursor(32,45);
+	lcd.println(sensors.last_sensor_impulses); 
+	lcd.display();
+//	lcd.display();     unnecessary
+//	lcd.display();	
+}	
+#endif
 
 void OpenSprinkler::lcd_print_2digit ( int v )
 {

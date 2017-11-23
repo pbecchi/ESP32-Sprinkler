@@ -440,7 +440,15 @@ void do_setup()
 
 	// @tcs: we set the ISR only if we have a flow sensor
 	if (os.options[OPTION_FSENSOR_TYPE] != SENSOR_TYPE_NONE) {
-		attachInterrupt(PIN_FLOWSENSOR_INT, flowsensor_ISR, FALLING);
+		attachInterrupt(digitalPinToInterrupt(PIN_FLOWSENSOR), flowsensor_ISR, FALLING);	
+	}
+	// setup ESP32 ADC for current sensing: 12bit, 0-1.1V FS range.
+	if (os.options[OPTION_CURRENT] != SENSOR_TYPE_NONE) {
+		adcAttachPin(PIN_CURR_SENSE);
+		analogReadResolution(12); //12 bits
+		analogSetWidth(12);
+		analogSetAttenuation(ADC_0db);  //For all pins
+		analogSetPinAttenuation(PIN_CURR_SENSE, ADC_0db); //ADC_2_5db  attenuation on pin Adc		
 	}
 #endif
 	DEBUG_PRINTLN("init...");
@@ -1016,6 +1024,7 @@ void do_loop()
             os.lcd_print_memory ( 1 );
 #else
             os.lcd_print_station ( 1, ui_anim_chars[curr_time % 3] );
+			      os.lcd_print_sensors ();
 #endif // OPENSPRINKLER_ARDUINO_FREEMEM
 		//DEBUG_PRINT(__LINE__); DEBUG_PRINT("_");
 
@@ -1746,8 +1755,9 @@ void delete_log(char *name) {
             // delete the whole log folder
             sd.vwd()->rmRfStar();
         }
-#else //ESP8266
+#else //ESP8266 ans ESP32
 		//format SPIIFS??
+		DEBUG_PRINTLN("delete All files not implemented");
 #endif
 		return;
 
@@ -1757,7 +1767,11 @@ void delete_log(char *name) {
 		if ( !sd.exists ( tmp_buffer ) )  return;
         sd.remove ( tmp_buffer );
 #else  //ESP8266
-		if (!SPIFFS.exists(tmp_buffer))  return;
+		if (!SPIFFS.exists(tmp_buffer)) {			
+				DEBUG_PRINT(" Not found "); DEBUG_PRINTLN(tmp_buffer);
+				return; 
+			}
+		DEBUG_PRINT(" Deleted "); DEBUG_PRINTLN(tmp_buffer);
 		SPIFFS.remove(tmp_buffer);
 #endif //ESP8266
 	}

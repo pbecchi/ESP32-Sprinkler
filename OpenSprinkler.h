@@ -374,6 +374,7 @@ static	LiquidCristal lcd;
   static bool programswitch_status(ulong); // get program switch status
 #endif
 #ifdef SG21
+  static void lcd_print_sensors();						//print sensors data
   static void soilsensor_status();// @tcsaba: update soilsensor status
 #endif
 #if defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__)
