@@ -1380,9 +1380,7 @@ void manual_start_program(byte pid) {
 // ================================
 // ====== LOGGING FUNCTIONS =======
 // ================================
-#if defined(ESP8266) || defined(ESP32)
-char LOG_PREFIX[] = "logs/";
-#elif defined(ARDUINO)
+#if defined(ARDUINO)
 char LOG_PREFIX[] = "/logs/";
 #else
 char LOG_PREFIX[] = "./logs/";
@@ -1454,7 +1452,7 @@ void write_log(byte type, ulong curr_time) {
 #else //ESP8266
 
 	DEBUG_PRINT("logFile W>"); DEBUG_PRINTLN(tmp_buffer);
-	memmove(tmp_buffer + 1, tmp_buffer, strlen(tmp_buffer)+1); tmp_buffer[0] = '/';
+//	memmove(tmp_buffer + 1, tmp_buffer, strlen(tmp_buffer)+1); tmp_buffer[0] = '/';
 	File file;
 	if (SPIFFS.exists(tmp_buffer))
 	{
@@ -1744,7 +1742,13 @@ void delete_log(char *name) {
     if ( !os.options[OPTION_ENABLE_LOGGING] ) return;
 #if defined(ARDUINO)
     if ( !os.status.has_sd ) return;
-
+	if (name[0] == '-') {
+		int n = atoi(name);
+		int day = os.now_tz() / 86400 + n;
+		name[0] = 0;
+		name = itoa(day, name, 10);
+		DEBUG_PRINTLN(name);
+	}
     if ( strncmp ( name, "all", 3 ) == 0 )
     {
 #if !defined(ESP8266) && !defined(ESP32)
