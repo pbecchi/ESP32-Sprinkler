@@ -940,29 +940,35 @@ void do_loop()
         }//if_some_program_is_running
 
         // handle master
-        if ( os.status.mas>0 ){
-            byte mas_on_adj = os.options[OPTION_MASTER_ON_ADJ];
-            byte mas_off_adj= os.options[OPTION_MASTER_OFF_ADJ];
-            byte masbit = 0;
-            os.station_attrib_bits_load ( ADDR_NVM_MAS_OP, ( byte* ) tmp_buffer ); // tmp_buffer now stores masop_bits
-      for(sid=0;sid<os.nstations;sid++) {
-                // skip if this is the master station
-                if ( os.status.mas == sid+1 ) continue;
-                bid = sid>>3;
-                s = sid&0x07;
-                // if this station is running and is set to activate master
-        if ((os.station_bits[bid]&(1<<s)) && (tmp_buffer[bid]&(1<<s))) {
-                    q=pd.queue+pd.station_qid[sid];
-                    // check if timing is within the acceptable range
-                    if ( curr_time >= q->st + mas_on_adj &&
-              curr_time <= q->st + q->dur + mas_off_adj) {
-                        masbit = 1;
-                        break;
-                    }
-                }
-            }
-            os.set_station_bit ( os.status.mas-1, masbit );
-        }
+	if (os.status.mas > 0) {
+
+#ifdef OS217
+		int16_t mas_on_adj = water_time_decode_signed(os.options[OPTION_MASTER_ON_ADJ]);
+		int16_t mas_off_adj = water_time_decode_signed(os.options[OPTION_MASTER_OFF_ADJ]);
+#else
+		byte mas_on_adj = os.options[OPTION_MASTER_ON_ADJ];
+		byte mas_off_adj = os.options[OPTION_MASTER_OFF_ADJ];
+#endif
+		byte masbit = 0;
+		os.station_attrib_bits_load(ADDR_NVM_MAS_OP, (byte*)tmp_buffer); // tmp_buffer now stores masop_bits
+		for (sid = 0; sid < os.nstations; sid++) {
+			// skip if this is the master station
+			if (os.status.mas == sid + 1) continue;
+			bid = sid >> 3;
+			s = sid & 0x07;
+			// if this station is running and is set to activate master
+			if ((os.station_bits[bid] & (1 << s)) && (tmp_buffer[bid] & (1 << s))) {
+				q = pd.queue + pd.station_qid[sid];
+				// check if timing is within the acceptable range
+				if (curr_time >= q->st + mas_on_adj &&
+					curr_time <= q->st + q->dur + mas_off_adj) {
+					masbit = 1;
+					break;
+				}
+			}
+		}
+		os.set_station_bit(os.status.mas - 1, masbit);
+	}
         // handle master2
         if ( os.status.mas2>0 ) {
 #ifdef OS217
