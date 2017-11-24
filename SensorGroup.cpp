@@ -130,7 +130,11 @@ const char alarm_message_text[] =
 "Low Current Alrm";
 // Flow sensor interrupt service routine with debounce
 // this might run very often, so we do not want to put heavy stuff here
-void flowsensor_ISR() {
+#ifdef ESP32
+void IRAM_ATTR flowsensor_ISR() {
+#else
+void  flowsensor_ISR() {
+#endif
 	if(SensorGroup::hall_effect_sensor){
 		SensorGroup::flow_last_impulse_ms = millis();
 		SensorGroup::sensor_impulses++;
