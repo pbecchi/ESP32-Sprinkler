@@ -518,11 +518,18 @@ byte OpenSprinkler::options[] =
     OS_HW_VERSION,
     1,  // number of 8-station extension board. 0: no extension boards
     1,  // the option 'sequential' is now retired
-    128,// station delay time (-59 minutes to 59 minutes).
-    0,  // index of master station. 0: no master station
-    0,  // master on time [0,60] seconds
-    60, // master off time [-60,60] seconds
-    0,  // sensor function (see SENSOR_TYPE macro defines)
+#ifdef OS217
+	120,// station delay time (-10 minutes to 10 minutes).
+	0,  // index of master station. 0: no master station
+    120,  // master on time [-10,10] min (x-120)*240 sec
+    120, // master off time [-10,10] min
+#else
+	128,// station delay time (-59 minutes to 59 minutes).
+	0,  // index of master station. 0: no master station
+	0,  // master on time [0,60] seconds
+	60, // master off time [-60,60] seconds
+#endif
+	0,  // sensor function (see SENSOR_TYPE macro defines)
     0,  // rain sensor type. 0: normally closed; 1: normally open.
     100,// water level (default 100%),
     1,  // device enable
