@@ -3253,7 +3253,7 @@ void OpenSprinkler::ui_set_options(int oid) {
 			if (i == OPTION_FW_VERSION || i == OPTION_HW_VERSION || i == OPTION_FW_MINOR ||
 				i == OPTION_HTTPPORT_0 || i == OPTION_HTTPPORT_1 ||
 				i == OPTION_PULSE_RATE_0 || i == OPTION_PULSE_RATE_1
-#ifdef OS217
+#ifdef SG21
 			   ||	i == OPTION_SGHW_VERSION || i == OPTION_SGFW_VERSION || i == OPTION_SEND_LOGFILES
 #endif				
 				) break; // ignore non-editable options
@@ -3264,7 +3264,7 @@ void OpenSprinkler::ui_set_options(int oid) {
 			if (i == OPTION_FW_VERSION || i == OPTION_HW_VERSION || i == OPTION_FW_MINOR ||
 				i == OPTION_HTTPPORT_0 || i == OPTION_HTTPPORT_1 ||
 				i == OPTION_PULSE_RATE_0 || i == OPTION_PULSE_RATE_1
-#ifdef OS217
+#ifdef SG21
 				|| i == OPTION_SGHW_VERSION || i == OPTION_SGFW_VERSION
 #endif
 				) break; // ignore non-editable options
@@ -3285,7 +3285,7 @@ void OpenSprinkler::ui_set_options(int oid) {
 				// click, move to the next option
 				if (i == OPTION_USE_DHCP && options[i]) i += 9; // if use DHCP, skip static ip set
 				else if (i == OPTION_HTTPPORT_0) i += 2; // skip OPTION_HTTPPORT_1
-#ifdef OS217
+#ifdef SG21
 				else if (i == OPTION_FW_MINOR) i += 3; // skip PULSE option
 				else if (i == OPTION_FSENSOR_TYPE && options[i] == SENSOR_TYPE_FLOW) i = OPTION_PULSE_RATE_0; // if no soil sensor, skip soil sensor options
 				else if (i == OPTION_PULSE_RATE_0) i = OPTION_FLOWUNIT_GAL;		// skip after OPTION_PULSE_RATE setting
@@ -3305,7 +3305,7 @@ void OpenSprinkler::ui_set_options(int oid) {
 				else {
 					i = (i + 1) % NUM_OPTIONS;
 				}
-#ifdef OS217
+#ifdef SG21
 				if (i == OPTION_SEQUENTIAL_RETIRED || i == OPTION_LCD_SIZE || i == OPTION_LANGUAGE_LCD) i++;
 #if defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__)
 				else if (hw_type == HW_TYPE_AC && i == OPTION_BOOST_TIME) i++;  // skip boost time for non-DC controller

@@ -43,9 +43,9 @@ extern "C" {
 #endif
 #ifdef LCDI2C
 #if   defined (LCD_SH1106)
-#include "lib\Adafruit_SH1106.h"
+#include "Adafruit_SH1106.h"
 #elif defined( LCD_SSD1306)
-#include "lib\Adafruit_SSD1306.h"
+#include "Adafruit_SSD1306.h"
 #else
 #include <LiquidCrystal_I2C.h>
 #endif

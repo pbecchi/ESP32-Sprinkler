@@ -83,14 +83,23 @@ Original Opensprinkler code commences below here
   #include <SdFat.h>
  #endif
 #endif
-////// LCD LIBRARIES/////////////////////////////////////
+////// LCD LIBRARIES//////////////
+///////////////////////library  local paths not nec with deep search//////////
+/*
 #if defined (LCDI2C)
-#if !defined(LCD_SSD1306) 
+
+#if   defined (LCD_SH1106)
+#include "Adafruit_SH1106.h"
+#elif defined( LCD_SSD1306)
+#include "Adafruit_SSD1306.h"
+#else
     #include <LiquidCrystal_I2C.h>
+
 #endif
 #else
 	#include <LiquidCrystal.h>
 #endif
+*/
 ////// ETHERNET LIBRARIES//////////////////////////////////
 	#ifdef OPENSPRINKLER_ARDUINO_W5100
 #if !defined(ESP8266) && !defined(ESP32)

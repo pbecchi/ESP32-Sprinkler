@@ -65,8 +65,8 @@ void reset_all_stations_immediate();
 void push_message(byte type, uint32_t lval = 0, float fval = 0.f, const char* sval = NULL);
 void httpget_callback(byte, uint16_t, uint16_t);
 //_______________________________________________________________________________
-#ifdef SG21
 void manual_start_program(byte, byte);
+#ifdef SG21
 extern void flowsensor_ISR();
 // @tcsaba: new functions
 void check_sensors(ulong curr_time);
@@ -279,7 +279,7 @@ void ui_state_machine()
                 
                 if ( digitalRead ( PIN_BUTTON_3 ) ==0 ){ // if B3 is pressed while holding B1, run a short test (internal test)
 
-#ifdef SG21
+#ifdef OS217
 					manual_start_program(255, 0);
 #else
                     manual_start_program ( 255 );
@@ -369,7 +369,7 @@ void ui_state_machine()
     if ((button & BUTTON_MASK)==BUTTON_3) {
       if (button & BUTTON_FLAG_HOLD) {
                 // start
-#ifdef SG21
+#ifdef OS217
         manual_start_program(ui_state_runprog, 0);
 #else
                 manual_start_program ( ui_state_runprog );
@@ -571,7 +571,7 @@ void do_loop()
 	
 	int volts=os.BatteryVoltage();
    
-	os.Sleep(volts);
+	os.Sleep(volts);r
 	//delay(100);
 #endif
 #endif
@@ -1030,7 +1030,9 @@ void do_loop()
             os.lcd_print_memory ( 1 );
 #else
             os.lcd_print_station ( 1, ui_anim_chars[curr_time % 3] );
+#ifdef SG21
 			      os.lcd_print_sensors ();
+#endif
 #endif // OPENSPRINKLER_ARDUINO_FREEMEM
 		//DEBUG_PRINT(__LINE__); DEBUG_PRINT("_");
 
@@ -1331,7 +1333,7 @@ void reset_all_stations() {
  * If pid==255, this is a short test program (2 second per station)
  * If pid > 0. run program pid-1
  */
-#ifdef SG21
+#ifdef OS217
 void manual_start_program(byte pid, byte uwt) {
 #else
 void manual_start_program(byte pid) {
@@ -1375,7 +1377,7 @@ void manual_start_program(byte pid) {
             match_found = true;
         }
     }
-#ifdef SG21
+#ifdef OS217
   }
 #endif
     if ( match_found ) {

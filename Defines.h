@@ -39,11 +39,10 @@
 #endif
 
 #define OS_FW_MINOR				1		// Firmware minor version
-
+#define PINMODE pinMode
 #ifdef SG21
 ///////t missing definitions
 #define __AVR_ATmega1284__
-#define PINMODE pinMode
 #define STN_TYPE_GPIO 0
 #define STN_TYPE_HTTP 1
 #define PIN_BOOST  16
