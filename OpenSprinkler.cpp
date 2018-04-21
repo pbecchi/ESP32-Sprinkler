@@ -33,15 +33,14 @@
 #endif  //EEPROM_ESP
 #endif
 #if defined(ESP8266) || defined(ESP32)
-/*#ifdef SPIFFSFAT
-#include <FS.h>
-#define sd SPIFFS
-#define FIL file
-#endif*/
+
 //#include "PCF8574/PCF8574.h"
 #include "PCF8574Mio.h"
-
-
+#ifdef LORA
+#include "LoraStation.h"
+LoraStation Lora;
+void switch_LoraStation(byte * buf, bool turnon);
+#endif
 #endif
 
 #ifdef PCF8574_M
@@ -1031,6 +1030,14 @@ void OpenSprinkler::begin()
 	delay(2000);
 	ScanI2c();
 
+#ifdef LORA
+	while (!Serial.available());
+	byte n=Serial.read()-'0';
+	byte k = Serial.read()-'0';
+	SPI.begin(SPI_SCLK, SPI_MISO, SPI_MOSI,SPI_CS);
+	Lora.begin(false);
+	Lora.findRouting(n, true, k);
+#endif
 #ifdef OPENSPRINKLER_ARDUINO_DISCRETE
 #ifdef OSBEE
 #if OSBEE == 1	
@@ -2061,6 +2068,14 @@ void OpenSprinkler::switch_special_station ( byte sid, byte value ){
         read_from_file ( stns_filename, tmp_buffer, stepsize, sid*stepsize );
         StationSpecialData *stn = ( StationSpecialData * ) tmp_buffer;
         // check station type
+
+#ifdef LORA
+#define STN_TYPE_LORA 1    /// LORA replace RF station UI app need mod.
+		if (stn->type == STN_TYPE_LORA) { 
+			// STN_TYPE_LORA==6  sd contain station number, name , otions,comma separated
+			switch_LoraStation(stn->data, value);
+		} else
+#endif
         if ( stn->type==STN_TYPE_RF ){
             // transmit RF signal
 
@@ -2224,6 +2239,23 @@ static void switchremote_callback ( byte status, uint16_t off, uint16_t len )
 {
     /* do nothing */
 }
+#ifdef LORA
+#define DEF_DURATION 3600
+void switch_LoraStation(byte * buf, bool turnon) {
+
+	char* staNumber = strtok((char *)buf, ",\0");
+	char* valvNumber = strtok(NULL, ",\0");
+	char* duration = strtok(NULL, ",\0");
+	byte staN = staNumber == NULL ? 0 : atoi(staNumber);
+	byte valvN = valvNumber == NULL ? 0 : atoi(valvNumber);
+	long dur = duration == NULL ? DEF_DURATION : atol(duration);
+	if (turnon)
+		Lora.runValve(staN, valvN, dur);
+	else
+		Lora.stopValves(staN);
+
+}
+#endif
 #ifdef OS217
 void OpenSprinkler::switch_gpiostation(GPIOStationData *data, bool turnon) {
 	byte gpio = (data->pin[0] - '0') * 10 + (data->pin[1] - '0');

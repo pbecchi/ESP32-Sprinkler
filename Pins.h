@@ -43,6 +43,7 @@ This way you can use expander for all functions (interrupt donot work right now)
 
 #include <Arduino.h>
 #include "Config.h"
+#define ESP_DELAY 0
 #define MIN_LCD_LINE 3
 #define MAX_LCD_LINE 5
 //#define DS1307RTC RTC_DS1307
@@ -102,8 +103,8 @@ This way you can use expander for all functions (interrupt donot work right now)
 //------ ESP32 basic definitions-------------------------------------------------------
 #elif defined(ESP32)
 //#define WIFIMANAGER wifimanager not supported yet Hardcoded SSID and PSW!
-#define SSID_NAME "TP-LINK_C20B"//TP_LINK_C20B"
-#define WIFI_PSW  "paolo-48"
+#define SSID_NAME "TIM-30634327"//TP_LINK_C20B"
+#define WIFI_PSW  "paolo1948"
 #ifndef D1
  #define D2 21
  #define D1 22
@@ -139,7 +140,7 @@ This way you can use expander for all functions (interrupt donot work right now)
 //                       PIN    ASSIGNEMENT
 //
 //////////////////////////////////////////////////////////////////////////
-#define PROTO 21    ///////////////////////board type selection////////////
+#define PROTO 13    ///////////////////////board type selection////////////
 /////////////////////////////////////////////////////////////////////////
 //////////////////////////////proto board 1////////////rear garden//////////////////////////////////
 #if PROTO==1 // shift register 
@@ -495,8 +496,58 @@ This way you can use expander for all functions (interrupt donot work right now)
 				  			//:no sd ....EMULATED ON fLASH
 //#define ADDITIONAL_SENSORS ESP8266_C        //:additional sensors to ESP  ESP32_ER
 #define EEPROM_ESP                          //modify in libsel.h
+#elif PROTO==13 // ESP32 on HELTEC OLED LORA
+#undef WIFIMANAGER
+#undef OTA_UPLOAD
+#define SDA_PIN   4
+#define SCL_PIN   15
+#define DS1307RTC I2CRTC
+#define LCD_SSD1306
+#define LCD_RST 16	
+#define LCD_ADDR 0x3c
+#define OPENSPRINKLER_ARDUINO_W5100      //:required for ESP8266 not using shift registers
+#define OPENSPRINKLER_ARDUINO_DISCRETE      //direct connection pin relay board
+//---------------------------new lorachannel settings------------------------------------------
+#define LORA    
+#define SPI_MOSI     27
+#define SPI_MISO     19
+#define SPI_CS       18
+#define SPI_SCLK      5
+#define LORA_RST     14
+#define LORA_IRQ     26
+#define LORA_MAX_STA 8
+#define EE_ADDRESS_RSSI (byte *)2301
+#define EE_ADDRESS_N_NODES (byte *)2300
+//-----------------------------------------------------------------------------------------------
+//#define SHIFT_REG
+// PCF8574 pin out  ----connected to relay module------------------------------ addr 0x3F
+#define PIN_STN_S01		0x24
+#define PIN_STN_S02		0x23
+#define PIN_STN_S03		0x22
+#define PIN_STN_S04		0x00    //NA
+#define PIN_STN_S05		0x00    //NA
+#define PIN_STN_S06		0x00    //NA
+#define PIN_STN_S07		0x00	//NA
+#define PIN_STN_S08		0x00	//NA
+//#define PCF8574_M        //PCF8574 are used for i/o
+#define STA_HIGH LOW     // low station output on for Relay
+#define STA_LOW HIGH     // high station output off for Relay
+//#define DS1307RTC RTC_MCP7940
+//-------------------------buttons--------------------------------------------
+//#define BUTTON_ADC_PIN
+//:digital buttons ---> IO n.on PCF8574 n.0 pins: Ox00 <>0x02
+#define PIN_BUTTON_1 0x25			//button are on  PCF8574 expaneder adr 0x3F
+#define PIN_BUTTON_2 0x26
+#define PIN_BUTTON_3 0x27
+#define BUT1_ON 1		//PIN input:1= Vcc, 0 =GND
+#define BUT2_ON 1		//PIN input:1= Vcc, 0 =GND
+#define BUT3_ON 1		//PIN input:1= Vcc, 0 =GND
+#define LCDI2C								//:i2c LCD
+//:no sd ....EMULATED ON fLASH
+//#define ADDITIONAL_SENSORS ESP8266_C        //:additional sensors to ESP  ESP32_ER
+#define EEPROM_ESP                          //modify in libsel.h
 //=========================================================================================
-#elif PROTO==21 //           ESP32 with SG21 board    Testbench
+#elif PROTO==21 //           ESP32 with SG21 board    Testbench on Olimex EVB
 //=========================================================================================mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,  nb                                                                                                                                                                                                                                                                          ,mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
 #define SG21
 #define OS217
@@ -505,12 +556,12 @@ This way you can use expander for all functions (interrupt donot work right now)
 #define SCL_PIN   17
 #undef WIFIMANAGER
 #undef OTA_UPLOAD
-#define DS1307RTC I2CRTC
+//#define DS1307RTC I2CRTC
 //-------------- OLED 128*64 DISPLAY ------------------------------------------------------
 #define LCDI2C								//:i2c LCD
 #define LCD_SSD1306
-#define LCD_SH1106
-#define LCD_RST DUMMY_PIN		
+//#define LCD_SH1106   //also LCD_SSD1306 	must be defined
+#define LCD_RST DUMMY_PIN	
 #define LCD_ADDR 0x3c
 //-------------- SHIFT REGISTER OUTPUT------------------------------------------------------
 #define SHIFT_REG
@@ -520,9 +571,9 @@ This way you can use expander for all functions (interrupt donot work right now)
 #define PIN_SR_LATCH       15    // shift register latch pin
 //-------------------------buttons--------------------------------------------
 //:digital buttons ---> IO n.on PCF8574 n.0 pins: Ox00 <>0x02
-#define PIN_BUTTON_1 34			//button are on  PCF8574 expaneder adr 0x3F
+#define PIN_BUTTON_1 36			
 #define PIN_BUTTON_2 4
-#define PIN_BUTTON_3 36
+#define PIN_BUTTON_3 34
 #define BUT1_ON 0		//PIN input:1= Vcc, 0 =GND
 #define BUT2_ON 0		//PIN input:1= Vcc, 0 =GND
 #define BUT3_ON 0		//PIN input:1= Vcc, 0 =GND

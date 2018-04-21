@@ -64,8 +64,9 @@ Original Opensprinkler code commences below here
 #else
 #include <DS1307RTC.h>
 #endif
-
-
+#ifdef LORA
+#include "LoraStation.h"
+#endif
 #ifdef OPENSPRINKLER_ARDUINO
 	#include <Wire.h>
 //PCF expander library///////////////////////////////
@@ -156,7 +157,10 @@ Original Opensprinkler code commences below here
 #endif
 #include "OpenSprinkler.h"
 //extern PCF8574 PCF[10];
-
+//#define BLUET
+#ifdef BLUET
+  #include "ble.h"
+#endif
 //extern OpenSprinkler os;
 //CLUP
 byte DB = 0xFF;     ////________________debug print everywhere_________________
@@ -169,13 +173,16 @@ void setup()
 #ifdef EEPROM_ESP
 
 	EEPROM.begin(NVM_SIZE);
-	
 #endif
 
 #ifdef OPENSPRINKLER_ARDUINO_AUTOREBOOT // Added for Auto Reboot   
    Alarm.alarmRepeat ( REBOOT_HR, REBOOT_MIN, REBOOT_SEC, reboot );
 #endif // OPENSPRINKLER_ARDUINO_AUTOREBOOT
    do_setup();
+#ifdef BLUET
+   BLE BLE;
+   BLE.setup();
+#endif
    DEBUG_PRINTLN(now());
 #ifdef OTA_UPLOAD
    // Port defaults to 8266

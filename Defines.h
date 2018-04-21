@@ -184,6 +184,8 @@
 		#define MAX_NUM_STATIONS	((1+MAX_EXT_BOARDS)*8)  // maximum number of stations
 #ifdef BATTERY							//more room to store battery options
 		#define NVM_SIZE 3072
+#elif defined(LORA)
+        #define NVM_SIZE 3072
 #else
 		#define NVM_SIZE            2048  // For AVR, nvm data is stored in EEPROM, ATmega644 has 2K EEPROM
 #endif

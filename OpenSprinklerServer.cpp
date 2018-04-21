@@ -1528,7 +1528,6 @@ byte server_json_log(char *p) {
 #endif
 
 	unsigned int start, end;
-
 	// past n day history
 	if (findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, PSTR("hist"), true)) {
 		int hist = atoi(tmp_buffer);
@@ -1657,7 +1656,7 @@ byte server_delete_log ( char *p )
 
     if ( !findKeyVal ( p, tmp_buffer, TMP_BUFFER_SIZE, PSTR ( "day" ), true ) )
         return HTML_DATA_MISSING;
-
+	
     delete_log ( tmp_buffer );
 
     return HTML_SUCCESS;
