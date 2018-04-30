@@ -136,12 +136,6 @@ struct ConStatus {
   byte enabled:1;           // operation enable (when set, controller operation is enabled)
   byte rain_delayed:1;      // rain delay bit (when set, rain delay is applied)
   byte rain_sensed:1;       // rain sensor bit (when set, it indicates that rain is detected)
-#ifdef SG21
-    byte dry_soil_1 : 1;		// soil sensor 1 bit (when set, the soil needs irrigation)
-	byte dry_soil_2 : 1;		// soil sensor 2 bit (when set, the soil needs irrigation)
-	byte netw_adapter_fail : 1; // HIGH when network adapter can't started
-	byte internet_fail : 1;     // HIGH when no internet connection (IP:8.8.8.8 have no ping response)	
-#endif
   byte program_busy:1;      // HIGH means a program is being executed currently
   byte has_curr_sense:1;    // HIGH means the controller has a current sensing pin
   byte has_sd:1;            // HIGH means a microSD card is detected
@@ -310,12 +304,6 @@ static	LiquidCristal lcd;
 #endif // OPENSPRINKLER_ARDUINO_DISCRETE
 
   // variables for time keeping
-#ifdef SG21
-	static ulong s1sensor_lasttime;  // @tcsaba: time when the last soilsensor1 reading is recorded
-	static ulong s2sensor_lasttime;  // @tcsaba: time when the last soilsensor2 reading is recorded
-	static byte  weather_update_flag;
-	static uint16_t current_offset;  // @tcsaba: current offset value when no station on
-#endif
   static ulong sensor_lasttime;  // time when the last sensor reading is recorded
   static ulong flowcount_time_ms;// time stamp when new flow sensor click is received (in milliseconds)
   static ulong flowcount_rt;     // flow count (for computing real-time flow rate)
@@ -372,10 +360,6 @@ static	LiquidCristal lcd;
   static void rainsensor_status();// update rainsensor status
 #ifdef OS217
   static bool programswitch_status(ulong); // get program switch status
-#endif
-#ifdef SG21
-  static void lcd_print_sensors();						//print sensors data
-  static void soilsensor_status();// @tcsaba: update soilsensor status
 #endif
 #if defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__)
   static uint16_t read_current(); // read current sensing value

@@ -86,18 +86,6 @@ public:
 
   // misc. data
   byte dummy1: 1;
-#ifdef SG21
-  
-  // weekly:   days[0][0..6] correspond to Monday till Sunday
-  // bi-weekly:days[0][0..6] and [1][0..6] store two weeks
-  // monthly:  days[0][0..5] stores the day of the month (32 means last day of month)
-  // interval: days[0] stores the interval (0 to 255), days[1] stores the starting day remainder (0 to 254)
-  byte attach_soil_sensor_1 : 1;
-  byte attach_soil_sensor_2 : 1;
-  
-	    // misc. data
-	  byte dummy2 : 6;
-#endif
   byte days[2];  
   
   // When the program is a fixed start time type:
