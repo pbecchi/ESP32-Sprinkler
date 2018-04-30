@@ -1035,7 +1035,7 @@ void OpenSprinkler::begin()
 	byte n=Serial.read()-'0';
 	byte k = Serial.read()-'0';
 	SPI.begin(SPI_SCLK, SPI_MISO, SPI_MOSI,SPI_CS);
-	Lora.begin(false);
+	Lora.begin(true);
 	Lora.findRouting(n, true, k);
 #endif
 #ifdef OPENSPRINKLER_ARDUINO_DISCRETE

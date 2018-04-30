@@ -25,7 +25,7 @@ public:
 	byte sendOptions(byte id, char *buf);
 	byte getResponse(byte id, char*buf);
 	byte send(byte id, char *buf);
-	byte getAck(byte& id, char *mess);
+	byte getAck(byte id, char *mess,byte len);
 	byte getVcontrol(byte id);//list of values);
 	byte sendTime(byte id,unsigned long time);
 	void LoraSend(String s);
