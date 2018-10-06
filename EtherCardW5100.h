@@ -52,8 +52,10 @@ Refer to the README file for more information
 #ifdef WIFIMANAGER
 #ifndef ESP32
 #include <ESP8266WebServer.h>
+#include   <WiFiManager-master/WiFiManager.h> //https://github.com/tzapu/WiFiManager
+#else
+#include <WiFiManager.h>   //copy directory WiFimanager-esp32 to ESP32/library.
 #endif
-#include   <WiFiManager-master\WiFiManager.h> //https://github.com/tzapu/WiFiManager
 #endif
 #ifndef ESP32
   #include <ESP8266WiFi.h>

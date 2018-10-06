@@ -80,7 +80,7 @@ time_t getNtpTime();
 // Small variations have been added to the timing values below
 // to minimize conflicting events
 #define NTP_SYNC_INTERVAL       86403L  // NYP sync interval, 24 hrs
-#define RTC_SYNC_INTERVAL       60      // RTC sync interval, 60 secs
+#define RTC_SYNC_INTERVAL       600     // RTC sync interval, 60 secs
 #define CHECK_NETWORK_INTERVAL  601     // Network checking timeout, 10 minutes
 #define CHECK_WEATHER_TIMEOUT   3601    // Weather check interval: 1 hour
 #define CHECK_WEATHER_SUCCESS_TIMEOUT 86433L // Weather check success interval: 24 hrs
@@ -347,11 +347,12 @@ void do_setup()
 	DEBUG_PRINTLN("init...");
     pd.init();            // ProgramData init
 	DEBUG_PRINTLN("clock...");
+	if(RTC.detect()){
     setSyncInterval ( RTC_SYNC_INTERVAL ); // RTC sync interval
     // if rtc exists, sets it as time sync source
 	DEBUG_PRINT(hour()); DEBUG_PRINT(":"); DEBUG_PRINTLN(minute());
-
-	setSyncProvider(RTC.get);
+    setSyncProvider(RTC.get);
+	}
 	DEBUG_PRINT(hour()); DEBUG_PRINT(":"); DEBUG_PRINTLN(minute());
 	DEBUG_PRINT(day()); DEBUG_PRINT("-"); DEBUG_PRINT(month()); DEBUG_PRINT("-"); DEBUG_PRINTLN(year());
 	DEBUG_PRINTLN(now());

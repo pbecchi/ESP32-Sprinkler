@@ -75,7 +75,7 @@ Original Opensprinkler code commences below here
 #endif
 // FILE STORAGE LIBRARIES////////////////////////////
 #ifndef SDFAT
-#ifdef ESP8266
+#ifdef ESP8266   
   #include <FS.h>
  #elif defined(ESP32)
   #include <SPIFFS.h>

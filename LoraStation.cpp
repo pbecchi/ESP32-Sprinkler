@@ -12,7 +12,7 @@ static RH_RF95 rf95;
 #include <EEPROM.h>
 RH_RF95 rf95(SPI_CS, LORA_IRQ);
 
-
+#include "OpenSprinkler.h"
 
 #include "Eeprom_ESP.h"
 
@@ -39,58 +39,10 @@ byte node[N_LOOPS];   //nodes of the path pathto return n.of nodes;
 #define NLEVELS 4
 long mask[NLEVELS][N_NODES];
 
-Adafruit_SSD1306  lcd(0x3c, 4, 15);
-
-#define LINE_POS 20
-#define NAME_POS  30
-#define VAL_POS  80
-#define FONT_H 8
-
-void lcd_dispValue(byte mode, char* name, long value) {
-	lcd.setCursor(0, LINE_POS);
-	lcd.drawRect(0, LINE_POS, FONT_H, 128, 0);
-	switch (mode) {
-	case 0:lcd.print(" up");
-	case 1:lcd.print("down");
-	case 2:lcd.print(" OK");
-	case 3:lcd.print("canc");
-	}
-	lcd.setCursor(NAME_POS, LINE_POS);
-	lcd.print(name);
-	lcd.setCursor(VAL_POS, LINE_POS);
-	lcd.print(value);
-
-	lcd.display();
-}
-
-long button_value(char * name, long start_val, bool waitpress, int factor = 1) {
-	//short press increment or decrement
-	//long press set increment,decrement,OK, disc
-	// 
-	byte mode = 0;
-	long value = start_val;
-	while (true) {
-		lcd_dispValue(mode, name, value);
-		if (waitpress == false && digitalRead(0) == 0)return 0;
-		int i = 0;
-		while (digitalRead(0) == 1 && i++ < 10000)delay(10);
-		if (i > 100) {
-			mode++; if (mode == 4)mode = 0;
-			lcd_dispValue(mode, name, value);
-		} else
-			switch (mode) {
-			case	0: {value += factor; break; }
-			case		   1: {value -= factor; break; }
-			case				  2: {return value; }
-			case				  3: {return start_val; }
-			}
-	}
-}
-
 void LoraStation::LoraSend(String s) {
 	rf95.setHeaderFrom(mycode);
 	rf95.setHeaderTo(LoraTo);
-	rf95.send((byte *)s.c_str(), sizeof(s));
+	rf95.send((byte *)s.c_str(), s.length());
 	rf95.waitPacketSent();
 }
 void LoraStation::LoraSend(char* s) {
@@ -310,40 +262,30 @@ bool LoraStation::begin(byte cadmode=false) {
 	}
 
 }
+OpenSprinkler oss;
 
-
-bool LoraStation::findRouting(byte n_nodes, bool find_node_routing, byte allNodes = 0) {
-
-	lcd.setCursor(0, 0);
-	lcd.print("LoRa Stations SCAN");
-
-	byte n = eeprom_read_byte(EE_ADDRESS_N_NODES);
-	lcd.print(n);
-	lcd.display();
-
-	allNodes = button_value("allNodes", n, true, 1);
-
-	//if (n != n_nodes)eeprom_write_byte(EE_ADDRESS_N_NODES, n_nodes);
-	if (n_nodes == 0) {  // nodes ==0 nodes from scanning or from eeprom
-		if (n == 0)
-			n_nodes = N_NODES; //nodes are unknown find how many scanning
-		else {
-			n_nodes = n;   //nodes are from EEPROM
-			if (find_node_routing) allNodes = n;
-		}
-	} else   //n_nodes specified overwrite eeprom
-			if (n != n_nodes)eeprom_write_byte(EE_ADDRESS_N_NODES, n_nodes);
+bool LoraStation::findRouting(byte n_nodes, bool find_node_routing,byte allNodes=0){   // byte allNodes = 0,byte n) {
 	
+	//if allNodes=0 will rescan all Lora terminal in the area
+	// if allNodes=n_nodes  read from eeprom N_nodes and RSSI matrix and define routing to nodes
+	byte totn = 0;
 	if (find_node_routing == true) {
-		
+
+		oss.lcd.clearDisplay();
+		oss.lcd.setCursor(0, 0);
+		oss.lcd.printf("Scanning %d LoRa Nodes...press Boot to exit", n_nodes);
+		oss.lcd.display();
+
 		Serial.println(F("Scanning all Lora nodes this may take up to 10 min."));
 		unsigned long maxMilli = millis() + 60000L*n_nodes;
 		bool scanmode = true;
-		while (allNodes < n_nodes&&millis() < maxMilli) {
+		while (allNodes < n_nodes&&millis() < maxMilli&&digitalRead(0)==1) {
 
 			byte buf[100]; byte len = 100;
 			byte nNodes = n_nodes;
 			//Serial.print('.');
+			//------------------read incoming messages---------------------------
+			//------only------------ scan or RSSIres ----------------------------
 			if (readLora(buf, len)) {
 				char* str;
 				//Serial.print('_');
@@ -366,7 +308,7 @@ bool LoraStation::findRouting(byte n_nodes, bool find_node_routing, byte allNode
 								mytime = (asknode - mycode) *nNodes* INTERVAL + millis() + nNodes*nNodes*INTERVAL;
 
 						}*/
-						char nn[12]; char  mess[16] = "RSSI,";                                      ////send RSSI
+						char nn[12]; char  mess[16] = "RSSI,";    ////send replay with RSSI
 						strcat(mess, itoa(-rf95.lastRssi(), nn, 10));
 						LoraTo = rf95.headerFrom();
 						LoraSend(mess);
@@ -386,7 +328,9 @@ bool LoraStation::findRouting(byte n_nodes, bool find_node_routing, byte allNode
 								}
 							}
 
-
+							oss.lcd.setCursor(0, 10);
+							oss.lcd.printf("Found node n.%d ,total %d found", LoraFrom, totn++);
+							oss.lcd.display();
 							Serial.print(F("RSSItot from")); Serial.println(rf95.headerFrom());
 							eeprom_write_block((void*)RSSItot, (void *)EE_ADDRESS_RSSI, sizeof(RSSItot));
 							allNodes++;
@@ -399,12 +343,14 @@ bool LoraStation::findRouting(byte n_nodes, bool find_node_routing, byte allNode
 					}
 			}
 			//Serial.print('-');
+			// scan all nodes up to nNodes
 			if (scanmode) {                   //////start myscan
 				int result[N_NODES] = { 0 };
 				for (byte node = 0; node < nNodes; node++) {
 					for (byte n = 0; n < nTimes; n++)
 						if (node != mycode) {
 							Serial.print(F("Scanning node ")); Serial.println(node);
+							
 							LoraTo = node;
 							char mess[15] = "scan,", cc[8];
 							strcat(mess, itoa(nNodes, cc, 10));
@@ -435,10 +381,17 @@ bool LoraStation::findRouting(byte n_nodes, bool find_node_routing, byte allNode
 						}
 					RSSI[node] = result[node] / nTimes;
 					if (RSSI[node] > LIMIT_RSSI)RSSI[node] = 0;
+					if( RSSI[node]!=0){
+						oss.lcd.setCursor(0, 18);
+						oss.lcd.printf("node %d RSSI %d t.%d", LoraFrom,RSSI[node], ++totn);
+						oss.lcd.display();
+					}
 				}
 				scanmode = false;
 				LoraTo = asknode;
 				Serial.println(asknode);
+				//---------------------------send RSSI matrix to asknode---------------------------- or
+				//---if mycode==0 store RRSI in general RSSItot matrix and sever on EEprom-----------------
 				char  mess[50] = "RSSIres,", nn[10];
 				strcat(mess, itoa(mycode, nn, 10)); strcat(mess, ",");
 				for (byte i = 0; i < nNodes; i++) {
@@ -459,20 +412,29 @@ bool LoraStation::findRouting(byte n_nodes, bool find_node_routing, byte allNode
 			}
 
 		}
-		for (byte i = 0; i < sizeof(RSSItot); i++)
-			Serial.println(RSSItot[i]);
+		byte k = 0;
+		for (byte i = 0; i < allNodes; i++)
+		{	for (byte j = 0; j <= i; j++)
+				Serial.printf("%d ", RSSItot[k++]);
+		Serial.println();
+		}
 		//______________ end scanning load routings______________________________
 		if(n_nodes==N_NODES)eeprom_write_byte(EE_ADDRESS_N_NODES,allNodes);
 		eeprom_read_block((void*)RSSItot, (void *)EE_ADDRESS_RSSI, sizeof(RSSItot));
 		maskRSSI(n_nodes);
+		oss.lcd.setCursor(0, 36);
 		for (byte i = 1; i < n_nodes; i++) {
 			byte j = 0;
 
 			for (j = 0; j < n_nodes; j++) {
-			//	Serial.print(RSSItot[inde(i, j)]); Serial.print(' ');
+				Serial.print(RSSItot[inde(i, j)]); Serial.print(' ');
+				if (i == j)oss.lcd.print(" X ");
+				else
+				oss.lcd.printf("%2d ", RSSItot[inde(i, j)]);
 				//if (RSSItot[inde(i, j)] != 0)break;
 			}
 			Serial.println();
+			//oss.lcd.println();
 			if (RSSItot[inde(i, 0)] == 0)
 				//	if (j < n_nodes)
 			{
@@ -484,11 +446,14 @@ bool LoraStation::findRouting(byte n_nodes, bool find_node_routing, byte allNode
 				for (byte n = 2; n <= nn; n++) {
 				Serial.println(node[n]);
 				routing[i] += node[n]<<(n-2)*8 ;
+				}
 				Serial.println(routing[i], HEX);
-			}
+				oss.lcd.println(routing[i], HEX);
 			} else
 				//Serial.print(F("node not found")); 
-				Serial.print(' ');
+			{	Serial.print(' ');
+			    oss.lcd.println(' ');
+			}
 		}
 	}
 }
@@ -498,7 +463,9 @@ byte LoraStation::sendProgram(byte Address, char * buf) {
 
 byte LoraStation::runValve(byte id, byte val, long time) {
 	/// send //pr?pid=81&durs=time1,time2
-	char mess[20], buff[100];
+	
+	
+	char mess[40], buff[100];
 	unsigned long timer[2] = { 0, 0};
 	timer[val]=time;
 	byte count = 0;
@@ -506,7 +473,8 @@ byte LoraStation::runValve(byte id, byte val, long time) {
 	do {
 		LoraSend(id, mess);
 		count++;
-	} while  (getAck(id, buff, sizeof(buff))&&count<SEND_COUNT);
+	} while  (getAck(id, buff, sizeof(buff))==0&&count<SEND_COUNT);
+
 	return 1-count/SEND_COUNT ; // return 0 if fail!! 
 }
 byte LoraStation::stopValves(byte id) {
@@ -516,7 +484,7 @@ byte LoraStation::stopValves(byte id) {
 	do {
 		LoraSend(id, mess);
 		count++;
-	} while (getAck(id, buff, sizeof(buff)) && count<SEND_COUNT);
+	} while (getAck(id, buff, sizeof(buff))==0 && count<SEND_COUNT);
 	return 1 - count / SEND_COUNT; // return 0 if fail!! LoraSend(id, mess);
 }
 
@@ -540,11 +508,11 @@ byte LoraStation::getAck(byte id, char * buf,byte len) {//read return message re
 		nn = readLora((byte*)buf, len);
 		if (nn) {
 			str = strtok(buf, "/");
-			Serial.print(str); Serial.print(' '); Serial.println(rf95.headerFrom());
-			if (str == NULL)
+			Serial.print(str); Serial.print(" from "); Serial.println(rf95.headerFrom());
+		//	if (str == NULL)
 				if(id != rf95.headerFrom())return 0;
-			else
-				if(id != atoi(str))return 0;
+		//	else
+		//		if(id != atoi(str))return 0;
 			break;
 		}
 	}

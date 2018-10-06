@@ -102,7 +102,7 @@ This way you can use expander for all functions (interrupt donot work right now)
 #define OS_HW_VERSION    0.0      // it will define releases
 //------ ESP32 basic definitions-------------------------------------------------------
 #elif defined(ESP32)
-//#define WIFIMANAGER wifimanager not supported yet Hardcoded SSID and PSW!
+#define WIFIMANAGER 0//wifimanager not supported yet Hardcoded SSID and PSW!
 #define SSID_NAME "TIM-30634327"//TP_LINK_C20B"
 #define WIFI_PSW  "paolo1948"
 #ifndef D1
@@ -497,7 +497,7 @@ This way you can use expander for all functions (interrupt donot work right now)
 //#define ADDITIONAL_SENSORS ESP8266_C        //:additional sensors to ESP  ESP32_ER
 #define EEPROM_ESP                          //modify in libsel.h
 #elif PROTO==13 // ESP32 on HELTEC OLED LORA
-#undef WIFIMANAGER
+//#undef WIFIMANAGER
 #undef OTA_UPLOAD
 #define SDA_PIN   4
 #define SCL_PIN   15

@@ -890,6 +890,114 @@ void OpenSprinkler::lcd_start()
 #endif
 }
 #endif
+#ifdef LORA
+
+//extern Adafruit_SSD1306  lcd;// (0x3c, 4, 15);
+
+#define LINE_POS 18
+#define NAME_POS  20
+#define VAL_POS  80
+#define FONT_H 8
+
+void OpenSprinkler::lcd_dispValue(byte mode,const char* name="", long value=0) {
+	lcd.setCursor(0, LINE_POS);
+	lcd.fillRect(0, LINE_POS, FONT_H, 128, 0);
+	switch (mode) {
+	case 0:{
+		lcd.print(" up  "); break; 
+	}
+	case 1:{
+		lcd.print("down  "); break;
+	}
+	case 2:{
+		lcd.print(" OK  "); break;
+	}
+	case 3:{
+		lcd.print("canc  "); break;
+	}
+	case 4:{
+		lcd.fillRect(0, LINE_POS, 128, FONT_H,  0);
+		break; }
+
+	}
+	
+	lcd.setCursor(NAME_POS, LINE_POS);
+	lcd.print(name);
+	lcd.setCursor(VAL_POS, LINE_POS);
+	lcd.print(value);
+
+	lcd.display();
+}
+
+ long OpenSprinkler::button_value(char * name, long start_val, bool waitpress, int factor = 1) {
+	 //no press for 20 sec return input value
+	//short press increment or decrement (<1 sc)
+	//long press set increment,decrement,OK, disc
+	// 
+	byte mode = 0;
+	delay(2000);
+	if (digitalRead(0) == 0)return start_val;
+	long value = start_val;
+	while (true) {
+		lcd_dispValue(mode, name, value);
+	
+		if (waitpress == false && digitalRead(0) == 0)return 0;
+		int i = 0;
+		while (digitalRead(0) == 1 && i++ < 2000)delay(10);
+		
+		if (i >= 2000)return value;
+		int presstime=0;
+		while (digitalRead(0) == 0 && presstime++ < 200)delay(20);
+		if (presstime> 50) {
+			mode++; if (mode == 4)mode = 0;
+			lcd_dispValue(mode, name, value);
+		}
+		else
+			switch (mode) {
+			case	0: {value += factor; break; }
+			case		   1: {value -= factor; break; }
+			case				  2: {return value; }
+			case				  3: {return start_val; }
+			}
+	}
+}
+ String OpenSprinkler::button_string(String* commands,int valo) {
+	 int i = 0, commLine = 0;
+	 byte code = 0;
+	 String result="";
+	 long val = valo;
+	 while (true){
+		 //char aaa[10];// = commands[commLine].c_str;
+		 //strcpy(aaa,commands[commLine].c_str());
+	 lcd_dispValue(code, commands[commLine].c_str(), val);
+	 while (digitalRead(0) == 1 && i++ < 2000)delay(10);
+     if (i >= 2000)return result ;
+	 	 int presstime = 0;
+	 while (digitalRead(0) == 0 && presstime++ < 200)delay(20);
+	 Serial.println(presstime);
+	 if (presstime > 100) {
+		 commLine++; if (commLine > 3)commLine = 0;
+	 }
+	 else if (presstime > 50){
+		 code++; if (code > 2)code=0;
+	 }
+	 else
+		 switch (code) {
+		 case 2:{
+			char Value[8]; 
+			 sprintf(Value, "%1d", val); 
+			 Serial.println(commands[commLine] + Value);
+			 return commands[commLine] + Value; 
+			}
+			 case 0:{val++; break;
+			}
+			 case 1:val--;
+		 }
+	
+ }
+ }
+#endif
+
 
 extern void flow_isr();
 /** Initialize pins, controller variables, LCD */
@@ -905,14 +1013,93 @@ void OpenSprinkler::begin()
 #endif
 	delay(2000);
 	ScanI2c();
-
+	lcd_start();
 #ifdef LORA
+	byte  n = eeprom_read_byte(EE_ADDRESS_N_NODES);
+
+/*	DEBUG_PRINT("Lora station N?,already known stations?");
 	while (!Serial.available());
 	byte n=Serial.read()-'0';
 	byte k = Serial.read()-'0';
+	DEBUG_PRINTLN(k);*/
 	SPI.begin(SPI_SCLK, SPI_MISO, SPI_MOSI,SPI_CS);
 	Lora.begin(true);
-	Lora.findRouting(n, true, k);
+	DEBUG_PRINTLN("Lora Started");
+	lcd.setCursor(0, 0);
+	lcd.print("LoRa Stations Nodes ");  
+	lcd.print(n);
+	lcd.print("press Boot to setup Lora");
+	lcd.display(); 
+	byte i = 0;
+	while (i++ < 250) {
+		delay(20);
+		if (digitalRead(0) == 1)break; 
+	}
+	
+	if(i<250){
+		int n_nodes=-1;
+	do
+	{
+		 n_nodes = button_value("allNodes", n, true, 1);
+		 if (n_nodes<0){
+			 
+			 String commands[] = {"/co?sot=  ","/rp?pid=83&durs=","/jc?      ","/jo?          " };
+			 String buff = OpenSprinkler::button_string(commands, 1);
+			 LoraTo = -n_nodes;
+			 char comand[26];
+			 strcpy(comand, buff.c_str());
+			 Lora.LoraSend(LoraTo,comand);
+			
+			 lcd.setCursor(0, 27);
+			 String m = "To:";
+			 m += LoraTo;
+			 lcd.println(m + ":" + buff);
+			 DEBUG_PRINTLN(m + ":" + buff);
+			 byte buf[80]; byte len=80;
+			 lcd.display();
+			 int inc = 0;
+			 while( Lora.readLora(buf, len)==0&&inc++<100) delay(100);
+			 buf[len]=0;
+			 m = "R:";
+			 lcd.println(m + (char*)buf );
+			 lcd.display();
+			 
+		 }
+	}
+	while (n_nodes < 0);
+	//lcd_dispValue(4); // clear line
+	//if n entered is 0 rescan same number of nodes 
+	//if n == n_nodes use previous scan results (default)
+	// if n entered is different from previous n record new n. and rescan
+	if(n_nodes!=0)
+		if (n_nodes != n) { 
+			eeprom_write_byte(EE_ADDRESS_N_NODES, n_nodes);
+			n = n_nodes;
+			n_nodes = 0;
+		}
+	
+/*	//if (n != n_nodes)eeprom_write_byte(EE_ADDRESS_N_NODES, n_nodes);{$$++]]
+	if (n_nodes == 0) {  // nodes ==0 nodes from scanning or from eeprom
+		if (n == 0)
+			n_nodes = 8; //nodes are unknown find how many scanning
+		else {
+			n_nodes = n;   //nodes are from EEPROM
+			if (find_node_routing) allNodes = n;
+		}
+	}
+	else   //n_nodes specified overwrite eeprom
+		if (n != n_nodes)eeprom_write_byte(EE_ADDRESS_N_NODES, n_nodes);
+
+		//n_nodes=0 from EE no lora
+		//n from input>n EE stations heve been added
+		//n from input=n from EE run with previous Lora setup (default case)
+		//n from input< n from EE rescan station have been removed or relocated  
+
+		if(n_nodes!=n)Lora.findRouting(n_nodes,true,0);//LoraStations Have been changed
+		else Lora.findRouting(n,true,n);
+*/
+	Lora.findRouting(n, true, n_nodes);
+	}
 #endif
 #ifdef OPENSPRINKLER_ARDUINO_DISCRETE
 #ifdef OSBEE
@@ -1041,7 +1228,7 @@ void OpenSprinkler::begin()
     digitalWrite ( PIN_CURR_DIGITAL, LOW );
 #endif
 
-    lcd_start();
+   
 #ifndef LCD_SSD1306
     // define lcd custom icons
     byte _icon[8];
@@ -2072,19 +2259,21 @@ static void switchremote_callback ( byte status, uint16_t off, uint16_t len )
     /* do nothing */
 }
 #ifdef LORA
-#define DEF_DURATION 3600
-void switch_LoraStation(byte * buf, bool turnon) {
+static bool valvOpen[8] = { 0,0,0,0,0,0,0,0 };
 
+void switch_LoraStation(byte * buf, bool turnon) {
+#define DEF_DURATION 3600
 	char* staNumber = strtok((char *)buf, ",\0");
 	char* valvNumber = strtok(NULL, ",\0");
 	char* duration = strtok(NULL, ",\0");
 	byte staN = staNumber == NULL ? 0 : atoi(staNumber);
 	byte valvN = valvNumber == NULL ? 0 : atoi(valvNumber);
 	long dur = duration == NULL ? DEF_DURATION : atol(duration);
-	if (turnon)
-		Lora.runValve(staN, valvN, dur);
-	else
-		Lora.stopValves(staN);
+	if (turnon&&!valvOpen[staN])
+		valvOpen[staN]=Lora.runValve(staN, valvN, dur);
+	if(!turnon&&valvOpen[staN])
+		valvOpen[staN]=!Lora.stopValves(staN);
+	Serial.printf("ValvOpen[%d]= %d \r\n",staN,valvOpen[staN]);
 
 }
 #endif

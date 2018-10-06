@@ -426,6 +426,9 @@ private:
   static void lcd_print_option(int i);  // print an option to the lcd
   static void lcd_print_2digit(int v);  // print a integer in 2 digits
   static void lcd_start();
+  static void lcd_dispValue(byte mode,const char * name, long value);
+  static long button_value(char * name, long start_val, bool waitpress, int factor);
+  static String button_string(String* commands, int val);
   static byte button_read_busy(byte pin_butt, byte waitmode, byte butt, byte is_holding);
 #if defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__)
   static byte engage_booster;
