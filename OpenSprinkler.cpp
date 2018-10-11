@@ -935,17 +935,22 @@ void OpenSprinkler::lcd_dispValue(byte mode,const char* name="", long value=0) {
 	//long press set increment,decrement,OK, disc
 	// 
 	byte mode = 0;
-	delay(2000);
+	Serial.println("start delay");
+	delay(10000);
 	if (digitalRead(0) == 0)return start_val;
 	long value = start_val;
+	Serial.println("start while");
 	while (true) {
 		lcd_dispValue(mode, name, value);
-	
+		Serial.println("start wait press 1");
 		if (waitpress == false && digitalRead(0) == 0)return 0;
 		int i = 0;
-		while (digitalRead(0) == 1 && i++ < 2000)delay(10);
-		
-		if (i >= 2000)return value;
+		Serial.println("start wait press 2");
+		while (digitalRead(0) == 1 && i++ < 200){
+			delay(100);Serial.print(i);
+	}
+		Serial.printf("i=%d", i);
+		if (i >= 200)return value;
 		int presstime=0;
 		while (digitalRead(0) == 0 && presstime++ < 200)delay(20);
 		if (presstime> 50) {
@@ -1016,6 +1021,10 @@ void OpenSprinkler::begin()
 	lcd_start();
 #ifdef LORA
 	byte  n = eeprom_read_byte(EE_ADDRESS_N_NODES);
+	if (n == 255) {
+		eeprom_write_byte(EE_ADDRESS_N_NODES, 0);
+		n = 0;
+	}
 
 /*	DEBUG_PRINT("Lora station N?,already known stations?");
 	while (!Serial.available());
@@ -1028,9 +1037,10 @@ void OpenSprinkler::begin()
 	lcd.setCursor(0, 0);
 	lcd.print("LoRa Stations Nodes ");  
 	lcd.print(n);
-	lcd.print("press Boot to setup Lora");
+	lcd.print("press Boot to exit Lora");
 	lcd.display(); 
 	byte i = 0;
+	pinMode(0, INPUT);
 	while (i++ < 250) {
 		delay(20);
 		if (digitalRead(0) == 1)break; 
@@ -1041,6 +1051,7 @@ void OpenSprinkler::begin()
 	do
 	{
 		 n_nodes = button_value("allNodes", n, true, 1);
+		 Serial.printf("n-nodes %d ", n_nodes);
 		 if (n_nodes<0){
 			 
 			 String commands[] = {"/co?sot=  ","/rp?pid=83&durs=","/jc?      ","/jo?          " };
@@ -1067,6 +1078,8 @@ void OpenSprinkler::begin()
 		 }
 	}
 	while (n_nodes < 0);
+	Serial.printf("n-nodes %d ", n_nodes);
+
 	//lcd_dispValue(4); // clear line
 	//if n entered is 0 rescan same number of nodes 
 	//if n == n_nodes use previous scan results (default)
@@ -1098,7 +1111,9 @@ void OpenSprinkler::begin()
 		if(n_nodes!=n)Lora.findRouting(n_nodes,true,0);//LoraStations Have been changed
 		else Lora.findRouting(n,true,n);
 */
-	Lora.findRouting(n, true, n_nodes);
+	if(n>0)Lora.findRouting(n, true, n_nodes);
+	Serial.printf("n %d n_nodes %d\n\r", n,n_nodes);
+
 	}
 #endif
 #ifdef OPENSPRINKLER_ARDUINO_DISCRETE
