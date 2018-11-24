@@ -770,7 +770,7 @@ void OpenSprinkler::reboot_dev()
 #if defined(ESP8266) || defined(ESP32)
 //	eeprom_write_byte((unsigned char *)(NVM_SIZE - 1), byte(charge / 25));
 	write_message("restart");
-	
+	Serial.println("REBOOT.........");
 	ESP.restart();
 #else
 
@@ -935,25 +935,25 @@ void OpenSprinkler::lcd_dispValue(byte mode,const char* name="", long value=0) {
 	//long press set increment,decrement,OK, disc
 	// 
 	byte mode = 0;
-	Serial.println("start delay");
+	//Serial.println("start delay");
 	delay(10000);
 	if (digitalRead(0) == 0)return start_val;
 	long value = start_val;
-	Serial.println("start while");
+	//Serial.println("start while");
 	while (true) {
 		lcd_dispValue(mode, name, value);
-		Serial.println("start wait press 1");
+		//Serial.println("start wait press 1");
 		if (waitpress == false && digitalRead(0) == 0)return 0;
 		int i = 0;
-		Serial.println("start wait press 2");
+		//Serial.println("start wait press 2");
 		while (digitalRead(0) == 1 && i++ < 200){
-			delay(100);Serial.print(i);
+			delay(100);//Serial.print(i);
 	}
-		Serial.printf("i=%d", i);
-		if (i >= 200)return value;
+		//Serial.printf("i=%d", i);
+		if (i >= 200)return value;                                        //20 sec.  exit
 		int presstime=0;
-		while (digitalRead(0) == 0 && presstime++ < 200)delay(20);
-		if (presstime> 50) {
+		while (digitalRead(0) == 0 && presstime++ < 200)delay(20);        //>4 seconds long press
+		if (presstime> 100) {                                              //<4 seconds 
 			mode++; if (mode == 4)mode = 0;
 			lcd_dispValue(mode, name, value);
 		}
@@ -1025,28 +1025,23 @@ void OpenSprinkler::begin()
 		eeprom_write_byte(EE_ADDRESS_N_NODES, 0);
 		n = 0;
 	}
-
-/*	DEBUG_PRINT("Lora station N?,already known stations?");
-	while (!Serial.available());
-	byte n=Serial.read()-'0';
-	byte k = Serial.read()-'0';
-	DEBUG_PRINTLN(k);*/
+	DEBUG_PRINTLN("Lora Start..");
 	SPI.begin(SPI_SCLK, SPI_MISO, SPI_MOSI,SPI_CS);
 	Lora.begin(true);
-	DEBUG_PRINTLN("Lora Started");
 	lcd.setCursor(0, 0);
 	lcd.print("LoRa Stations Nodes ");  
 	lcd.print(n);
-	lcd.print("press Boot to exit Lora");
+	lcd.print("press Boot for NET setup");
 	lcd.display(); 
 	byte i = 0;
 	pinMode(0, INPUT);
-	while (i++ < 250) {
-		delay(20);
+	while (i++ < 200) {
+		delay(10);
 		if (digitalRead(0) == 1)break; 
 	}
 	
-	if(i<250){
+	if(i>=200)
+	{
 		int n_nodes=-1;
 	do
 	{
@@ -1054,7 +1049,10 @@ void OpenSprinkler::begin()
 		 Serial.printf("n-nodes %d ", n_nodes);
 		 if (n_nodes<0){
 			 
-			 String commands[] = {"/co?sot=  ","/rp?pid=83&durs=","/jc?      ","/jo?          " };
+			 String commands[] = {	"/co?sot=  ",
+									"/rp?pid=83&durs=",	
+									"/jc?      ",
+									"/jo?          " };
 			 String buff = OpenSprinkler::button_string(commands, 1);
 			 LoraTo = -n_nodes;
 			 char comand[26];
@@ -1357,8 +1355,10 @@ void OpenSprinkler::begin()
     // set button pins
     // enable internal pullup
     pinMode ( PIN_BUTTON_1, BUT1_ON == 0 ? INPUT_PULLUP : INPUT);
+	DEBUG_PRINTLN(PIN_BUTTON_1);
     pinMode ( PIN_BUTTON_2,  BUT2_ON == 0 ? INPUT_PULLUP : INPUT);
-    pinMode ( PIN_BUTTON_3,BUT3_ON==0? INPUT_PULLUP:INPUT );
+	DEBUG_PRINTLN(PIN_BUTTON_2);
+	pinMode ( PIN_BUTTON_3,BUT3_ON==0? INPUT_PULLUP:INPUT );
 	DEBUG_PRINT("b1="); DEBUG_PRINTLN(digitalRead(PIN_BUTTON_1));
 	DEBUG_PRINT("b2="); DEBUG_PRINTLN(digitalRead(PIN_BUTTON_2));
 	DEBUG_PRINT("b3="); DEBUG_PRINTLN(digitalRead(PIN_BUTTON_3));
@@ -2146,6 +2146,113 @@ void OpenSprinkler::switch_special_station ( byte sid, byte value ){
 }
 
 #endif
+#ifdef LORA
+
+void switch_LoraStation(byte * buf, bool turnon, long dura) {
+#define DEF_DURATION 3600
+	DEBUG_PRINTLN(dura);
+	char* staNumber = strtok((char *)buf, ",\0");
+	char* valvNumber = strtok(NULL, ",\0");
+	char* duration = strtok(NULL, ",\0");
+	byte staN = staNumber == NULL ? 0 : atoi(staNumber);
+	byte valvN = valvNumber == NULL ? 0 : atoi(valvNumber);
+	long dur = dura == 0 ?  atol(duration):dura;
+	DEBUG_PRINTLN(staN);
+	if (turnon && !valvOpen[staN])
+		valvOpen[staN] = Lora.runValve(staN, valvN, dur);
+	if (!turnon&&valvOpen[staN])
+		valvOpen[staN] = !Lora.stopValves(staN);
+	Serial.printf("ValvOpen[%d]= %d \r\n", staN, valvOpen[staN]);
+
+}
+/** Switch special station */
+void OpenSprinkler::switch_special_station(byte sid, byte value, long duration) {
+	// check station special bit
+
+	if (station_attrib_bits_read(ADDR_NVM_STNSPE + (sid >> 3)) & (1 << (sid & 0x07))) {
+		// read station special data from sd card
+		int stepsize = sizeof(StationSpecialData);
+		read_from_file(stns_filename, tmp_buffer, stepsize, sid*stepsize);
+		StationSpecialData *stn = (StationSpecialData *)tmp_buffer;
+		// check station type
+
+#ifdef LORA
+#define STN_TYPE_LORA 1    /// LORA replace RF station UI app need mod.
+		if (stn->type == STN_TYPE_LORA) {
+			// STN_TYPE_LORA==6  sd contain station number, name , otions,comma separated
+			switch_LoraStation(stn->data, value, duration);
+		}
+		else
+#endif
+			if (stn->type == STN_TYPE_RF) {
+				// transmit RF signal
+
+#ifdef OS217
+				switch_rfstation((RFStationData *)stn->data, value);
+			}
+			else if (stn->type == STN_TYPE_REMOTE) {
+				// request remote station
+				switch_remotestation((RemoteStationData *)stn->data, value);
+			}
+#if !defined(ARDUINO) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__)
+		// GPIO and HTTP stations are only available for OS23 or OSPi
+			else if (stn->type == STN_TYPE_GPIO) {
+				// set GPIO pin
+				switch_gpiostation((GPIOStationData *)stn->data, value);
+			}
+			else if (stn->type == STN_TYPE_HTTP) {
+				// transmit RF signal
+				switch_httpstation((HTTPStationData *)stn->data, value);
+			}
+#endif    
+	}
+}
+#else
+#ifdef PORT_RF
+				switch_rfstation(stn->data, value);
+#endif
+
+		}
+			else if (stn->type == STN_TYPE_REMOTE)
+			{
+				// request remote station
+				switch_remotestation(stn->data, value);
+			}
+	}
+}
+#endif
+
+byte OpenSprinkler::set_station_bit(byte sid, byte value,long duration)
+{
+	byte *data = station_bits + (sid >> 3); // pointer to the station byte
+	byte mask = (byte)1 << (sid & 0x07); // mask
+	if (value)
+	{
+		if ((*data) &mask) return 0; // if bit is already set, return no change
+		else
+		{
+			(*data) = (*data) | mask;
+#if defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__)
+			engage_booster = true; // if bit is changing from 0 to 1, set engage_booster
+#endif
+			switch_special_station(sid, 1,duration); // handle special stations
+			return 1;
+		}
+	}
+	else
+	{
+		if (!((*data) &mask)) return 0; // if bit is already reset, return no change
+		else
+		{
+			(*data) = (*data) & (~mask);
+			switch_special_station(sid, 0,duration); // handle special stations
+			return 255;
+		}
+	}
+	return 0;
+}
+
+#endif 
 /** Set station bit
  * This function sets/resets the corresponding station bit variable
  * You have to call apply_all_station_bits next to apply the bits
@@ -2274,7 +2381,7 @@ static void switchremote_callback ( byte status, uint16_t off, uint16_t len )
     /* do nothing */
 }
 #ifdef LORA
-static bool valvOpen[8] = { 0,0,0,0,0,0,0,0 };
+
 
 void switch_LoraStation(byte * buf, bool turnon) {
 #define DEF_DURATION 3600
@@ -3243,13 +3350,27 @@ byte OpenSprinkler::button_read_busy ( byte pin_butt, byte waitmode, byte butt, 
 
 }
 
+byte press_result( byte time1, byte time2) {
+	while (digitalRead(BUTTON_1) != BUT1_ON) delay(10);
+	byte i=0;
+	while (digitalRead(BUTTON_1) == BUT1_ON) {
+		i++; 
+		delay(100);
+
+	}
+	if (i < time1 * 10)return 1;
+	if (i<time2 * 10 && i>time1 * 10)return 2;
+	return 3;
+}
 /** read button and returns button value 'OR'ed with flag bits */
 byte OpenSprinkler::button_read ( byte waitmode )
 {
     static byte old = BUTTON_NONE;
     byte curr = BUTTON_NONE;
     byte is_holding = ( old&BUTTON_FLAG_HOLD );
-
+#ifdef BOOT_BUTTON
+	return press_result(2,4);//return 1 for press <2sec  , 2 <4sec ,3 longer
+#endif
     delay ( BUTTON_DELAY_MS );
 	byte but1 = digitalRead(PIN_BUTTON_1);
 	byte but2 = digitalRead(PIN_BUTTON_2);

@@ -33,7 +33,7 @@ byte asknode = 1;                         //<--------------identifcatore del nod
 
 //bool scanmode = false;
 byte RSSI[N_NODES];
-byte RSSItot[(N_NODES*(N_NODES-1)) / 2 +1];
+
 
 byte node[N_LOOPS];   //nodes of the path pathto return n.of nodes;
 #define NLEVELS 4
@@ -149,7 +149,7 @@ byte inde(byte rw, byte cl) {
 }
 #define LEV_MAX 120
 #define LEV_MIN 60
-void maskRSSI(byte imax) {
+void maskRSSI(byte imax, byte * RSSItot) {
 	for (byte i = 0; i < imax; i++) {
 		int dlevel = (LEV_MAX-LEV_MIN) / NLEVELS;
 		for (byte l = 0; l < NLEVELS; l++) {
@@ -251,8 +251,9 @@ bool LoraStation::begin(byte cadmode=false) {
 		Serial.println("init failed");
 		return false;
 	}
-
-	//	rf95.setFrequency(434);
+#ifdef LORA915
+	rf95.setFrequency(915.0);
+#endif  //----------------------------------------default is 433-------------------
 	//rf95.setPreambleLength(500);
 	rf95.setThisAddress(0);
 	rf95.setTxPower(20);
@@ -265,7 +266,7 @@ bool LoraStation::begin(byte cadmode=false) {
 OpenSprinkler oss;
 
 bool LoraStation::findRouting(byte n_nodes, bool find_node_routing,byte allNodes=0){   // byte allNodes = 0,byte n) {
-	
+	byte RSSItot[(N_NODES*(N_NODES - 1)) / 2 + 1];
 	//if allNodes=0 will rescan all Lora terminal in the area
 	// if allNodes=n_nodes  read from eeprom N_nodes and RSSI matrix and define routing to nodes
 	byte totn = 0;
@@ -421,7 +422,7 @@ bool LoraStation::findRouting(byte n_nodes, bool find_node_routing,byte allNodes
 		//______________ end scanning load routings______________________________
 		if(n_nodes==N_NODES)eeprom_write_byte(EE_ADDRESS_N_NODES,allNodes);
 		eeprom_read_block((void*)RSSItot, (void *)EE_ADDRESS_RSSI, sizeof(RSSItot));
-		maskRSSI(n_nodes);
+		maskRSSI(n_nodes,RSSItot);
 		oss.lcd.setCursor(0, 36);
 		for (byte i = 1; i < n_nodes; i++) {
 			byte j = 0;
@@ -470,6 +471,7 @@ byte LoraStation::runValve(byte id, byte val, long time) {
 	timer[val]=time;
 	byte count = 0;
 	sprintf(mess, "/rp?pid=81&durs=%d,%d", timer[0],timer[1]);
+	DEBUG_PRINTLN(mess);
 	do {
 		LoraSend(id, mess);
 		count++;

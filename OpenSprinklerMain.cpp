@@ -187,14 +187,14 @@ void ui_state_machine()
 
 #ifndef BUTTON_ADC_PIN
                 
-                if ( digitalRead ( PIN_BUTTON_3 ) ==0 ){ // if B3 is pressed while holding B1, run a short test (internal test)
+                if ( digitalRead ( PIN_BUTTON_3 ) ==BUT3_ON ){ // if B3 is pressed while holding B1, run a short test (internal test)
 
 #ifdef OS217
 					manual_start_program(255, 0);
 #else
                     manual_start_program ( 255 );
 #endif       
-				} else if (digitalRead(PIN_BUTTON_2)==0) { // if B2 is pressed while holding B1, display gateway IP
+				} else if (digitalRead(PIN_BUTTON_2)==BUT2_ON) { // if B2 is pressed while holding B1, display gateway IP
                     os.lcd_print_ip ( ether.gwip, 0 );
                     os.lcd.setCursor ( 0, 1*YFACTOR );
                     os.lcd_print_pgm ( PSTR ( "(gwip)" ) );
@@ -700,7 +700,11 @@ void do_loop()
             if (curr_time >= q->st && curr_time < q->st+q->dur) {
 
                             //turn_on_station(sid);
+#ifdef LORA
+							os.set_station_bit(sid, 1,q->dur);
+#else
                             os.set_station_bit ( sid, 1 );
+#endif
 
                         } //if curr_time > scheduled_start_time
                     } // if current station is not running

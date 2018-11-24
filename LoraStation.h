@@ -1,9 +1,11 @@
 #pragma once
-#define N_STATIONS 5
+ 
 #include <Arduino.h>
 #include <RH_RF95.h>
-
+#include "Pins.h"
+#define N_STATIONS LORA_MAX_STA
 static byte LoraTo = 1, LoraFrom = 0;
+static bool valvOpen[LORA_MAX_STA] = { 0 };
 struct valve {
 	byte number;
 	String name;
@@ -17,7 +19,7 @@ public:
 	byte StationAddress[N_STATIONS];           /// fixed at startup  by 
 	String StationName[N_STATIONS];    
 	valve  valv[4][N_STATIONS];
-	long routing[N_STATIONS];                  // byte addr=(routing>>8)&0xFF ==0 direct
+	long routing[N_STATIONS]={0 };                  // byte addr=(routing>>8)&0xFF ==0 direct
 	byte sendProgram(byte id,char* buf);
 	byte runValve(byte id, byte val,long time);
 	byte stopValves(byte id);

@@ -367,8 +367,11 @@ static	LiquidCristal lcd;
   static int detect_exp();        // detect the number of expansion boards
   static byte weekday_today();    // returns index of today's weekday (Monday is 0)
 
+  byte set_station_bit(byte sid, byte value, long duration);
+
   static byte set_station_bit(byte sid, byte value); // set station bit of one station (sid->station index, value->0/1)
   static void switch_special_station(byte sid, byte value); // swtich special station
+  void switch_special_station(byte sid, byte value, long duration);
   static void clear_all_station_bits(); // clear all station bits
   static void apply_all_station_bits(); // apply all station bits (activate/deactive values)
 
