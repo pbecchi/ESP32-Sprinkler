@@ -1037,10 +1037,10 @@ void OpenSprinkler::begin()
 	pinMode(0, INPUT);
 	while (i++ < 200) {
 		delay(10);
-		if (digitalRead(0) == 1)break; 
+		if (digitalRead(0) == 0)break; 
 	}
 	
-	if(i>=200)
+	if(i<200)
 	{
 		int n_nodes=-1;
 	do
@@ -1325,7 +1325,8 @@ void OpenSprinkler::begin()
 
 #else
 	long tot = 0;
-	DEBUG_PRINTLN("Start SPIFFS....");
+
+	DEBUG_PRINT("Start SPIFFS....");
 
 #ifndef ESP32
 	 if (SPIFFS.begin()) 
@@ -1334,6 +1335,8 @@ void OpenSprinkler::begin()
 #endif
 	{
 		 status.has_sd = 1;
+		 DEBUG_PRINTLN("started!");
+		 delay(500);
 #ifdef ESP8266
 		Dir dir = SPIFFS.openDir("/");
 		while (dir.next()) { DEBUG_PRINT(dir.fileName()); DEBUG_PRINT("  "); DEBUG_PRINTLN(dir.fileSize()); tot += dir.fileSize(); }
@@ -1347,6 +1350,7 @@ void OpenSprinkler::begin()
 	}
 	else DEBUG_PRINTLN("Coundn't start SPIFFS");
 #endif
+
 
 
 #ifdef BUTTON_ADC_PIN

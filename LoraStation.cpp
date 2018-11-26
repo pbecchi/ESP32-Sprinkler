@@ -251,6 +251,7 @@ bool LoraStation::begin(byte cadmode=false) {
 		Serial.println("init failed");
 		return false;
 	}
+	rf95.setTxPower(20);
 #ifdef LORA915
 	rf95.setFrequency(915.0);
 #endif  //----------------------------------------default is 433-------------------

@@ -538,7 +538,7 @@ This way you can use expander for all functions (interrupt donot work right now)
 //:digital buttons ---> IO n.on PCF8574 n.0 pins: Ox00 <>0x02
 //#define BOOT_BUTTON
 #define PIN_BUTTON_1 0x00			//button are on  PCF8574 expaneder adr 0x3F
-#define PIN_BUTTON_2 0x30
+#define PIN_BUTTON_2 0x32
 #define PIN_BUTTON_3 0x33
 #define BUT1_ON 0		//PIN input:1= Vcc, 0 =GND
 #define BUT2_ON 1		//PIN input:1= Vcc, 0 =GND
