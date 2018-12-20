@@ -2,7 +2,8 @@
  * Copyright (C) 2015 by Ray Wang (ray@opensprinkler.com)
  *
  * Main loop
- * Feb 2015 @ OpenSprinkler.com
+ * Fe
+ 2015 @ OpenSprinkler.com
  *
  * This file is part of the OpenSprinkler Firmware
  *
@@ -698,16 +699,16 @@ void do_loop()
                     // if current station is not running, check if we should turn it on
           if(!((bitvalue>>s)&1)) {
             if (curr_time >= q->st && curr_time < q->st+q->dur) {
-
                             //turn_on_station(sid);
 #ifdef LORA
+				Serial.printf("open %d for %d \r\n", sid, q->dur);
 							os.set_station_bit(sid, 1,q->dur);
 #else
                             os.set_station_bit ( sid, 1 );
 #endif
 
                         } //if curr_time > scheduled_start_time
-                    } // if current station is not running
+                    } // if current statio n is not running
                 }//end_s
             }//end_bid
 
@@ -1451,6 +1452,7 @@ void check_network() {
         }
         while ( millis() - start < PING_TIMEOUT );
 #endif
+		DEBUG_PRINT("NETfails:"); DEBUG_PRINTLN(os.status.network_fails);
 		if ( failed )
         {
             os.status.network_fails++;

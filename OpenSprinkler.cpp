@@ -2153,14 +2153,14 @@ void OpenSprinkler::switch_special_station ( byte sid, byte value ){
 #ifdef LORA
 
 void switch_LoraStation(byte * buf, bool turnon, long dura) {
-#define DEF_DURATION 3600
+#define DEF_DURATION 36000
 	DEBUG_PRINTLN(dura);
 	char* staNumber = strtok((char *)buf, ",\0");
 	char* valvNumber = strtok(NULL, ",\0");
 	char* duration = strtok(NULL, ",\0");
 	byte staN = staNumber == NULL ? 0 : atoi(staNumber);
 	byte valvN = valvNumber == NULL ? 0 : atoi(valvNumber);
-	long dur = dura == 0 ?  atol(duration):dura;
+	long dur = dura == 0 ?  DEF_DURATION:dura;
 	DEBUG_PRINTLN(staN);
 	if (turnon && !valvOpen[staN])
 		valvOpen[staN] = Lora.runValve(staN, valvN, dur);
@@ -2388,7 +2388,7 @@ static void switchremote_callback ( byte status, uint16_t off, uint16_t len )
 
 
 void switch_LoraStation(byte * buf, bool turnon) {
-#define DEF_DURATION 3600
+#define DEF_DURATION 36000
 	char* staNumber = strtok((char *)buf, ",\0");
 	char* valvNumber = strtok(NULL, ",\0");
 	char* duration = strtok(NULL, ",\0");

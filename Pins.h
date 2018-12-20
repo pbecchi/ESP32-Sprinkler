@@ -102,6 +102,7 @@ This way you can use expander for all functions (interrupt donot work right now)
 #define OS_HW_VERSION    0.0      // it will define releases
 //------ ESP32 basic definitions-------------------------------------------------------
 #elif defined(ESP32)
+#define MESSAGE
 #define WIFIMANAGER 0//wifimanager not supported yet Hardcoded SSID and PSW!
 #define SSID_NAME "TIM-30634327"//TP_LINK_C20B"
 #define WIFI_PSW  "paolo1948"
@@ -515,7 +516,7 @@ This way you can use expander for all functions (interrupt donot work right now)
 #define SPI_SCLK      5
 #define LORA_RST     14
 #define LORA_IRQ     26
-#define LORA_MAX_STA 8
+#define LORA_MAX_STA 65
 #define EE_ADDRESS_RSSI (byte *)2301
 #define EE_ADDRESS_N_NODES (byte *)2300
 //-----------------------------------------------------------------------------------------------

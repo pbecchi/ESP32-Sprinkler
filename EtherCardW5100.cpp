@@ -650,6 +650,7 @@ bool EtherCardW5100::WiFiconnect( const uint8_t* my_ip, const uint8_t* gw_ip, co
 /// <returns>True if DHCP successful</returns>
 bool EtherCardW5100::dhcpSetup ( const char *hname, bool fromRam )
 {
+	bool result;
     using_dhcp = true;
 
     // initialize the ethernet device
@@ -687,7 +688,7 @@ bool EtherCardW5100::dhcpSetup ( const char *hname, bool fromRam )
 		netflag = false;
 	}
 	else
-   bool 	result = wifiManager.autoConnect("AutoConnectAP");
+   	result = wifiManager.autoConnect("AutoConnectAP");
 //!!!!!!!!!!reconnect in station mode!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	DEBUG_PRINTLN(WiFi.getMode());
 /*	WiFi.disconnect();
@@ -704,10 +705,10 @@ bool EtherCardW5100::dhcpSetup ( const char *hname, bool fromRam )
 	}
 	DEBUG_PRINTLN(WiFi.getMode());*/
 #else
-bool	result = WiFiconnect();
+	result = WiFiconnect();
 
 #endif
-
+    if (result==false)return result;
 #ifdef HOSTNAM
 	
 		// Set up mDNS responder:
