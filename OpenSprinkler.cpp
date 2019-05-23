@@ -1337,6 +1337,36 @@ void OpenSprinkler::begin()
 		 status.has_sd = 1;
 		 DEBUG_PRINTLN("started!");
 		 delay(500);
+#ifdef LORA //read loranet.dat file that contain manual LORA MESH connections 1 line per connection
+		 if (SPIFFS.exists("/loranet.dat"))
+		 {
+			 byte str[10],c=0, i = 0; long longval=0;
+			 File file = SPIFFS.open("/loranet.dat", "r+");
+			 DEBUG_PRINTLN("reading LoraNet file");
+			 while (file.available()) {
+				 c = file.read();
+				 if (c == '/')
+				 {
+					 longval = longval * 256 + i;
+					 DEBUG_PRINT(i); DEBUG_PRINT("/"); DEBUG_PRINTLN(longval);
+					 i = 0;
+				 }
+				 else
+					 if (c == 10) {
+						 longval = longval * 256 + i;
+						 DEBUG_PRINT(i); DEBUG_PRINT("/");
+						 Lora.routing[i] = longval;
+						 Serial.println(longval, HEX);
+						 longval = 0;
+						
+					 }
+					 else if(c>='0'&& c<='9')
+						 i = i * 10 + c - '0';
+
+
+			 }
+		 }
+#endif
 #ifdef ESP8266
 		Dir dir = SPIFFS.openDir("/");
 		while (dir.next()) { DEBUG_PRINT(dir.fileName()); DEBUG_PRINT("  "); DEBUG_PRINTLN(dir.fileSize()); tot += dir.fileSize(); }
@@ -2179,7 +2209,7 @@ void OpenSprinkler::switch_special_station(byte sid, byte value, long duration) 
 		read_from_file(stns_filename, tmp_buffer, stepsize, sid*stepsize);
 		StationSpecialData *stn = (StationSpecialData *)tmp_buffer;
 		// check station type
-
+		DEBUG_PRINT("SStype"); DEBUG_PRINTLN(stn->type);
 #ifdef LORA
 #define STN_TYPE_LORA 1    /// LORA replace RF station UI app need mod.
 		if (stn->type == STN_TYPE_LORA) {

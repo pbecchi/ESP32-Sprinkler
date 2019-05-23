@@ -498,6 +498,9 @@ This way you can use expander for all functions (interrupt donot work right now)
 //#define ADDITIONAL_SENSORS ESP8266_C        //:additional sensors to ESP  ESP32_ER
 #define EEPROM_ESP                          //modify in libsel.h
 #elif PROTO==13 // ESP32 on HELTEC OLED LORA
+//ESP32 Lora Oled module or HELTEC or TTGO
+//available pin input :				34,35,36,37,38,39
+//available input-output:			12,13,17,21,22,23,25,32,33
 //#undef WIFIMANAGER
 #undef OTA_UPLOAD
 #define SDA_PIN   4
@@ -521,16 +524,16 @@ This way you can use expander for all functions (interrupt donot work right now)
 #define EE_ADDRESS_N_NODES (byte *)2300
 //-----------------------------------------------------------------------------------------------
 //#define SHIFT_REG
-// PCF8574 pin out  ----connected to relay module------------------------------ addr 0x3F
-#define PIN_STN_S01		0x24
-#define PIN_STN_S02		0x23
-#define PIN_STN_S03		0x22
-#define PIN_STN_S04		0x00    //NA
+// pin out  ----connected to relay module------------------------------ addr 0x3F
+#define PIN_STN_S01		21
+#define PIN_STN_S02		13
+#define PIN_STN_S03		12
+#define PIN_STN_S04		25 
 #define PIN_STN_S05		0x00    //NA
 #define PIN_STN_S06		0x00    //NA
 #define PIN_STN_S07		0x00	//NA
 #define PIN_STN_S08		0x00	//NA
-//#define PCF8574_M        //PCF8574 are used for i/o
+//#define PCF8574_M        //if PCF8574 are used for i/o
 #define STA_HIGH LOW     // low station output on for Relay
 #define STA_LOW HIGH     // high station output off for Relay
 //#define DS1307RTC RTC_MCP7940
@@ -538,12 +541,15 @@ This way you can use expander for all functions (interrupt donot work right now)
 //#define BUTTON_ADC_PIN
 //:digital buttons ---> IO n.on PCF8574 n.0 pins: Ox00 <>0x02
 //#define BOOT_BUTTON
-#define PIN_BUTTON_1 0x00			//button are on  PCF8574 expaneder adr 0x3F
-#define PIN_BUTTON_2 0x32
-#define PIN_BUTTON_3 0x33
+#define PIN_BUTTON_1 0x00			//button1 on BOOT are not on  PCF8574 expaneder adr 0x3F
+#define PIN_BUTTON_2 0x35
+#define PIN_BUTTON_3 0x36
 #define BUT1_ON 0		//PIN input:1= Vcc, 0 =GND
 #define BUT2_ON 1		//PIN input:1= Vcc, 0 =GND
 #define BUT3_ON 1		//PIN input:1= Vcc, 0 =GND
+//------------------------sensors------------------------------------
+#define PIN_FLOWSENSOR    34      // flow sensor (currently shared with rain sensor, change if using a different pin)
+#define PIN_FLOWSENSOR_INT 34     // flow sensor interrupt pin (INT1)
 #define LCDI2C								//:i2c LCD
 //:no sd ....EMULATED ON fLASH
 //#define ADDITIONAL_SENSORS ESP8266_C        //:additional sensors to ESP  ESP32_ER

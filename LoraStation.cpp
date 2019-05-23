@@ -58,9 +58,31 @@ void LoraStation::LoraSend(byte add, char* s) {
 		Serial.print(add);
 		rf95.setHeaderTo(add);
 		strcpy(buf, s);
-	} else {
-		long code = routing[add];
-		rf95.setHeaderTo(code & 0xFF);
+	}
+	else {
+		char address[6] = "/0";
+		buf[0] = '/';
+		buf[1] = '0';
+		buf[2] = 0;
+
+		long code = routing[add]; byte addr[5],i;
+		for ( i = 0; i < 5; i++)
+		{
+			if (code ==0)break;
+			addr[i] = code & 0xFF;
+			code = code >> 8;
+			Serial.println(addr[i]);
+		}
+		rf95.setHeaderTo(addr[i-1]);
+		for (int j = i - 1; j >= 0; j--) {
+
+			sprintf(address, "/%d", addr[j]);
+			strcat(buf, address);
+			Serial.println(buf);
+		}
+		
+		/*
+		rf95.setHeaderTo(code&0xFF);
 		Serial.print(code & 0xFF);
 			while (code != 0) {
 				char address[6];
@@ -68,6 +90,7 @@ void LoraStation::LoraSend(byte add, char* s) {
 				strcat(buf, address);
 				code = code >> 8;
 			}
+			*/
 			strcat(buf, s);
 		
 	}
@@ -77,12 +100,23 @@ void LoraStation::LoraSend(byte add, char* s) {
 	rf95.send((byte *)buf, strlen(buf));
 	rf95.waitPacketSent();
 }
+void strshorten(char * buf, byte ii, byte len) {
+	byte i, k = 1;
+	buf[0] = '/';
+	for (i = ii + 1; i < len; i++) {
+		buf[k++] = buf[i];
+		DEBUG_PRINT((char)buf[i]);
+	}
+	buf[k] = 0;
+
+}
+/*
 void strshorten(char * buf, byte ii) {
 	byte i;
 	for ( i = ii; i < strlen(buf); i++)
 		buf[i - ii] = buf[i];
 	buf[i - ii + 1] = 0;
-}
+}*/
 byte LoraStation::readLora(byte * buf, uint8_t len) { // read packet and send it to next recipient
 
 	if (rf95.available()) {
@@ -122,8 +156,9 @@ byte LoraStation::readLora(byte * buf, uint8_t len) { // read packet and send it
 					}
 				} else {
 					Serial.println(F("received"));
-					strshorten((char *)buf, ii);
-					len = len - ii;
+					//strshorten((char *)buf, ii);
+					strshorten((char *)buf, ii-1,len);
+					Serial.print((char*)buf); Serial.println(len);
 				}
 			}
 
@@ -509,19 +544,39 @@ byte LoraStation::getResponse(byte id, char * buf) {
 byte LoraStation::getAck(byte id, char * buf,byte len) {//read return message return message len or 0
 	char* str="    ";
 	byte  nn = 0;
-	unsigned long millisout = millis() + WAIT_MILLI;
-	while (millis() < millisout) {
-		nn = readLora((byte*)buf, len);
-		if (nn) {
-			str = strtok(buf, "/");
-			Serial.print(str); Serial.print(" from "); Serial.println(rf95.headerFrom());
-		//	if (str == NULL)
-				if(id != rf95.headerFrom())return 0;
-		//	else
-		//		if(id != atoi(str))return 0;
-			break;
+	if (routing[id] == 0) {
+		unsigned long millisout = millis() + WAIT_MILLI;
+
+		while (millis() < millisout) {
+			nn = readLora((byte*)buf, len);
+			if (nn) {
+				str = strtok(buf, "/");
+				Serial.print(str); Serial.print(" from "); Serial.println(rf95.headerFrom());
+				//	if (str == NULL)
+				if (id != rf95.headerFrom())return 0;
+				//	else
+				//		if(id != atoi(str))return 0;
+				break;
+			}
 		}
 	}
+	else {
+		unsigned long millisout = millis() + WAIT_MILLI * 4;
+		while (millis() < millisout) {
+			nn = readLora((byte*)buf, len);
+			if (nn) {
+				Serial.print(str); Serial.print(" from "); Serial.println(rf95.headerFrom());
+				long replay = routing[id];
+				while (replay > 256)replay=replay >> 8;
+				Serial.println(replay);
+				if ((replay & 0xFF) != rf95.headerFrom() && (replay & 0xFF) != id) {
+					 return 0;
+				}
+				break;
+			}
+		}
+	}
+	
 	return nn;
 }
 
