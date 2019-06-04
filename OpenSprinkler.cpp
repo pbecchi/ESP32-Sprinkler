@@ -89,7 +89,7 @@ byte OpenSprinkler::engage_booster;
 ulong OpenSprinkler::sensor_lasttime;
 ulong OpenSprinkler::flowcount_log_start;
 ulong OpenSprinkler::flowcount_rt;
-ulong OpenSprinkler::flowcount_time_ms;
+volatile ulong OpenSprinkler::flowcount_time_ms;
 ulong OpenSprinkler::raindelay_start_time;
 byte OpenSprinkler::button_timeout;
 ulong OpenSprinkler::checkwt_lasttime;
@@ -1172,7 +1172,8 @@ void OpenSprinkler::begin()
     // Set up sensors
 #if defined(ARDUINO)
 	digitalWrite ( PIN_RAINSENSOR, HIGH ); // enabled internal pullup on rain sensor         //ESP32_ER
-    attachInterrupt ( PIN_FLOWSENSOR_INT, flow_isr, FALLING );
+	pinMode(PIN_FLOWSENSOR, INPUT_PULLDOWN);
+    attachInterrupt ( PIN_FLOWSENSOR_INT, flow_isr, RISING );
 #else
     // OSPI and OSBO use external pullups
     attachInterrupt ( PIN_FLOWSENSOR, "falling", flow_isr );

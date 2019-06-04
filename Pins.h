@@ -548,8 +548,8 @@ This way you can use expander for all functions (interrupt donot work right now)
 #define BUT2_ON 1		//PIN input:1= Vcc, 0 =GND
 #define BUT3_ON 1		//PIN input:1= Vcc, 0 =GND
 //------------------------sensors------------------------------------
-#define PIN_FLOWSENSOR    34      // flow sensor (currently shared with rain sensor, change if using a different pin)
-#define PIN_FLOWSENSOR_INT 34     // flow sensor interrupt pin (INT1)
+#define PIN_FLOWSENSOR    33      // flow sensor (currently shared with rain sensor, change if using a different pin)
+#define PIN_FLOWSENSOR_INT 33     // flow sensor interrupt pin (INT1)
 #define LCDI2C								//:i2c LCD
 //:no sd ....EMULATED ON fLASH
 //#define ADDITIONAL_SENSORS ESP8266_C        //:additional sensors to ESP  ESP32_ER

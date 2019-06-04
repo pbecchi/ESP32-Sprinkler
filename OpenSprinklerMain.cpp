@@ -115,7 +115,12 @@ float flow_last_gpm = 0;
 
 volatile ulong flow_count = 0;
 /** Flow sensor interrupt service routine */
-void flow_isr() {
+#ifdef ESP32
+void IRAM_ATTR flow_isr()
+#else
+void flow_isr()
+#endif
+{
 	if (os.options[OPTION_SENSOR_TYPE] != SENSOR_TYPE_FLOW) return;
 	ulong curr = millis();
 
@@ -135,11 +140,16 @@ void flow_isr() {
 #else
 volatile ulong flow_count = 0;
 /** Flow sensor interrupt service routine */
+#ifdef ESP32
+void IRAM_ATTR flow_isr()
+#else
 void flow_isr()
+#endif
 {
+	//DEBUG_PRINTLN("ò");
     if ( os.options[OPTION_SENSOR_TYPE]!=SENSOR_TYPE_FLOW ) return;
     ulong curr = millis();
-    if ( curr-os.flowcount_time_ms < 50 ) return; // debounce threshold: 50ms
+    if ( curr < 50+os.flowcount_time_ms ) return; // debounce threshold: 50ms
     flow_count++;
     os.flowcount_time_ms = curr;
 }
